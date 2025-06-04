@@ -23,45 +23,14 @@
  */
 package org.ta4j.core.criteria.pnl;
 
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.NumberOfLosingPositionsCriterion;
-import org.ta4j.core.num.Num;
 
 /**
  * Average gross loss criterion.
  */
-public class GrossAverageLossCriterion extends AbstractPnLCriterion {
+public class GrossAverageLossCriterion extends AbstractAverageCriterion {
 
-    private final GrossLossCriterion grossLossCriterion = new GrossLossCriterion();
-    private final NumberOfLosingPositionsCriterion numberOfLosingPositionsCriterion = new NumberOfLosingPositionsCriterion();
-
-    @Override
-    public Num calculate(BarSeries series, Position position) {
-        var zero = series.numFactory().zero();
-        var numberOfLosingPositions = numberOfLosingPositionsCriterion.calculate(series, position);
-        if (numberOfLosingPositions.isZero()) {
-            return zero;
-        }
-        var grossLoss = grossLossCriterion.calculate(series, position);
-        if (grossLoss.isZero()) {
-            return zero;
-        }
-        return grossLoss.dividedBy(numberOfLosingPositions);
-    }
-
-    @Override
-    public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        var zero = series.numFactory().zero();
-        var numberOfLosingPositions = numberOfLosingPositionsCriterion.calculate(series, tradingRecord);
-        if (numberOfLosingPositions.isZero()) {
-            return zero;
-        }
-        var grossLoss = grossLossCriterion.calculate(series, tradingRecord);
-        if (grossLoss.isZero()) {
-            return zero;
-        }
-        return grossLoss.dividedBy(numberOfLosingPositions);
+    public GrossAverageLossCriterion() {
+        super(new GrossLossCriterion(), new NumberOfLosingPositionsCriterion());
     }
 }

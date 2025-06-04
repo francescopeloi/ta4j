@@ -23,45 +23,14 @@
  */
 package org.ta4j.core.criteria.pnl;
 
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.NumberOfWinningPositionsCriterion;
-import org.ta4j.core.num.Num;
 
 /**
  * Average net profit criterion.
  */
-public class NetAverageProfitCriterion extends AbstractPnLCriterion {
+public class NetAverageProfitCriterion extends AbstractAverageCriterion {
 
-    private final NetProfitCriterion netProfitCriterion = new NetProfitCriterion();
-    private final NumberOfWinningPositionsCriterion numberOfWinningPositionsCriterion = new NumberOfWinningPositionsCriterion();
-
-    @Override
-    public Num calculate(BarSeries series, Position position) {
-        var zero = series.numFactory().zero();
-        var numberOfWinningPositions = numberOfWinningPositionsCriterion.calculate(series, position);
-        if (numberOfWinningPositions.isZero()) {
-            return zero;
-        }
-        var netProfit = netProfitCriterion.calculate(series, position);
-        if (netProfit.isZero()) {
-            return zero;
-        }
-        return netProfit.dividedBy(numberOfWinningPositions);
-    }
-
-    @Override
-    public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        var zero = series.numFactory().zero();
-        var numberOfWinningPositions = numberOfWinningPositionsCriterion.calculate(series, tradingRecord);
-        if (numberOfWinningPositions.isZero()) {
-            return zero;
-        }
-        var netProfit = netProfitCriterion.calculate(series, tradingRecord);
-        if (netProfit.isZero()) {
-            return zero;
-        }
-        return netProfit.dividedBy(numberOfWinningPositions);
+    public NetAverageProfitCriterion() {
+        super(new NetProfitCriterion(), new NumberOfWinningPositionsCriterion());
     }
 }
