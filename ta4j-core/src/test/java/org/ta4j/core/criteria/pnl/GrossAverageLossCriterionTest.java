@@ -21,7 +21,6 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package org.ta4j.core.criteria.pnl;
 
 import static org.ta4j.core.TestUtils.assertNumEquals;
@@ -33,10 +32,10 @@ import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
-public class GrossLossCriterionTest extends AbstractPnlCriterionTest {
+public class GrossAverageLossCriterionTest extends AbstractPnlCriterionTest {
 
-    public GrossLossCriterionTest(NumFactory numFactory) {
-        super(params -> new GrossLossCriterion(), numFactory);
+    public GrossAverageLossCriterionTest(NumFactory numFactory) {
+        super(params -> new GrossAverageLossCriterion(), numFactory);
     }
 
     @Override
@@ -46,7 +45,7 @@ public class GrossLossCriterionTest extends AbstractPnlCriterionTest {
 
     @Override
     protected void handleCalculateWithLosses(Num result) {
-        assertNumEquals(-35, result);
+        assertNumEquals(-17.5, result);
     }
 
     @Override
@@ -61,12 +60,12 @@ public class GrossLossCriterionTest extends AbstractPnlCriterionTest {
 
     @Override
     protected void handleCalculateOnlyWithLossPositions(Num result) {
-        assertNumEquals(-35, result);
+        assertNumEquals(-17.5, result);
     }
 
     @Override
     protected void handleCalculateProfitWithShortPositions(Num result) {
-        assertNumEquals(-35, result);
+        assertNumEquals(-17.5, result);
     }
 
     @Override

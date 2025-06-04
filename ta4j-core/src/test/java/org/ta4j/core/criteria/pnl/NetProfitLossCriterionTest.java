@@ -33,30 +33,30 @@ import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
-public class GrossLossCriterionTest extends AbstractPnlCriterionTest {
+public class NetProfitLossCriterionTest extends AbstractPnlCriterionTest {
 
-    public GrossLossCriterionTest(NumFactory numFactory) {
-        super(params -> new GrossLossCriterion(), numFactory);
+    public NetProfitLossCriterionTest(NumFactory numFactory) {
+        super(params -> new NetProfitLossCriterion(), numFactory);
     }
 
     @Override
     protected void handleCalculateWithProfits(Num result) {
-        assertNumEquals(0, result);
+        assertNumEquals(21, result);
     }
 
     @Override
     protected void handleCalculateWithLosses(Num result) {
-        assertNumEquals(-35, result);
+        assertNumEquals(-38.65, result);
     }
 
     @Override
     protected void handleCalculateOnlyWithProfitPositions(Num result) {
-        assertNumEquals(0, result);
+        assertNumEquals(15, result);
     }
 
     @Override
     protected void handleCalculateOnlyWithProfitPositions2(Num result) {
-        assertNumEquals(0, result);
+        assertNumEquals(25, result);
     }
 
     @Override

@@ -25,54 +25,43 @@ package org.ta4j.core.criteria.pnl;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
-import org.ta4j.core.Trade;
 import org.ta4j.core.TradingRecord;
-import org.ta4j.core.criteria.AbstractAnalysisCriterion;
+import org.ta4j.core.criteria.NumberOfWinningPositionsCriterion;
 import org.ta4j.core.num.Num;
 
 /**
- * Net profit and loss in percentage criterion (relative PnL, excludes trading
- * costs), returned in percentage format (e.g. 1 = 1%).
- *
- * <p>
- * Defined as the position profit over the purchase price. The profit or loss in
- * percentage over the provided {@link Position position(s)}.
- * https://www.investopedia.com/ask/answers/how-do-you-calculate-percentage-gain-or-loss-investment/
+ * Average gross profit criterion.
  */
-public class ProfitLossPercentageCriterion extends AbstractAnalysisCriterion {
+public class GrossAverageProfitCriterion extends AbstractPnLCriterion {
+
+    private final GrossProfitCriterion grossProfitCriterion = new GrossProfitCriterion();
+    private final NumberOfWinningPositionsCriterion numberOfWinningPositionsCriterion = new NumberOfWinningPositionsCriterion();
 
     @Override
     public Num calculate(BarSeries series, Position position) {
-        var numFactory = series.numFactory();
-        if (position.isClosed()) {
-            var entryPrice = position.getEntry().getValue();
-            return position.getProfit().dividedBy(entryPrice).multipliedBy(numFactory.hundred());
+        var zero = series.numFactory().zero();
+        var numberOfWinningPositions = numberOfWinningPositionsCriterion.calculate(series, position);
+        if (numberOfWinningPositions.isZero()) {
+            return zero;
         }
-        return numFactory.zero();
+        var grossProfit = grossProfitCriterion.calculate(series, position);
+        if (grossProfit.isZero()) {
+            return zero;
+        }
+        return grossProfit.dividedBy(numberOfWinningPositions);
     }
 
     @Override
     public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        var numFactory = series.numFactory();
-        var zero = numFactory.zero();
-
-        var totalProfit = tradingRecord.getPositions()
-                .stream()
-                .filter(Position::isClosed)
-                .map(Position::getProfit)
-                .reduce(zero, Num::plus);
-
-        var totalEntryPrice = tradingRecord.getPositions()
-                .stream()
-                .filter(Position::isClosed)
-                .map(Position::getEntry)
-                .map(Trade::getValue)
-                .reduce(zero, Num::plus);
-
-        if (totalEntryPrice.isZero()) {
+        var zero = series.numFactory().zero();
+        var numberOfWinningPositions = numberOfWinningPositionsCriterion.calculate(series, tradingRecord);
+        if (numberOfWinningPositions.isZero()) {
             return zero;
         }
-        return totalProfit.dividedBy(totalEntryPrice).multipliedBy(numFactory.hundred());
+        var grossProfit = grossProfitCriterion.calculate(series, tradingRecord);
+        if (grossProfit.isZero()) {
+            return zero;
+        }
+        return grossProfit.dividedBy(numberOfWinningPositions);
     }
-
 }
