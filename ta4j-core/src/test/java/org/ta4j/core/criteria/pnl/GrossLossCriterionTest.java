@@ -26,7 +26,6 @@ package org.ta4j.core.criteria.pnl;
 
 import static org.ta4j.core.TestUtils.assertNumEquals;
 
-
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.ta4j.core.CriterionFactory;
