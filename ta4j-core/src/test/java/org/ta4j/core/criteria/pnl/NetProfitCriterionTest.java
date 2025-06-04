@@ -9,7 +9,6 @@ import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
-/** Specific tests for {@link NetProfitCriterion}. */
 public class NetProfitCriterionTest extends AbstractPnlCriterionTest {
 
     public NetProfitCriterionTest(NumFactory numFactory) {

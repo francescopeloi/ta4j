@@ -9,7 +9,6 @@ import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
-/** Specific tests for {@link GrossLossCriterion}. */
 public class GrossLossCriterionTest extends AbstractPnlCriterionTest {
 
     public GrossLossCriterionTest(NumFactory numFactory) {
