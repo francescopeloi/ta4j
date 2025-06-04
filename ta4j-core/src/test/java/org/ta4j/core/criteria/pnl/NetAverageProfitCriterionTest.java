@@ -78,4 +78,9 @@ public class NetAverageProfitCriterionTest extends AbstractPnlCriterionTest {
     protected void handleCalculateOneOpenPositionShouldReturnZero() {
         openedPositionUtils.testCalculateOneOpenPositionShouldReturnExpectedValue(numFactory, getCriterion(), 0);
     }
+
+    @Override
+    protected void handleCalculateWithOpenedPosition(Num result) {
+        assertNumEquals(10, result);
+    }
 }

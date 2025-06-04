@@ -159,7 +159,7 @@ public abstract class AbstractPnlCriterionTest extends AbstractCriterionTest {
         var record = new BaseTradingRecord(Trade.buyAt(0, series), Trade.sellAt(2, series), Trade.buyAt(3, series));
 
         AnalysisCriterion criterion = getCriterion();
-        assertNumEquals(10, criterion.calculate(series, record));
+        handleCalculateWithOpenedPosition(criterion.calculate(series, record));
     }
 
     protected abstract void handleCalculateWithProfits(Num result);
@@ -177,4 +177,6 @@ public abstract class AbstractPnlCriterionTest extends AbstractCriterionTest {
     protected abstract void handleBetterThan(AnalysisCriterion criterion);
 
     protected abstract void handleCalculateOneOpenPositionShouldReturnZero();
+
+    protected abstract void handleCalculateWithOpenedPosition(Num result);
 }
