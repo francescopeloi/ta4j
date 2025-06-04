@@ -12,7 +12,7 @@ import org.ta4j.core.num.NumFactory;
 public class NetLossCriterionTest extends AbstractPnlCriterionTest {
 
     public NetLossCriterionTest(NumFactory numFactory) {
-        super((CriterionFactory) params -> new NetLossCriterion(), numFactory);
+        super(params -> new NetLossCriterion(), numFactory);
     }
 
     @Override
