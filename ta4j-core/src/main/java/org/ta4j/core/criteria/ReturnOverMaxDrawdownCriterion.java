@@ -27,7 +27,7 @@ import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
-import org.ta4j.core.criteria.pnl.ReturnCriterion;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 import org.ta4j.core.num.NaN;
 import org.ta4j.core.num.Num;
 
@@ -36,12 +36,12 @@ import org.ta4j.core.num.Num;
  * format.
  *
  * <pre>
- * RoMaD = {@link ReturnCriterion gross return (with base)} / {@link MaximumDrawdownCriterion maximum drawdown}
+ * RoMaD = {@link GrossReturnCriterion gross return (with base)} / {@link MaximumDrawdownCriterion maximum drawdown}
  * </pre>
  */
 public class ReturnOverMaxDrawdownCriterion extends AbstractAnalysisCriterion {
 
-    private final AnalysisCriterion grossReturnCriterion = new ReturnCriterion();
+    private final AnalysisCriterion grossReturnCriterion = new GrossReturnCriterion();
     private final AnalysisCriterion maxDrawdownCriterion = new MaximumDrawdownCriterion();
 
     @Override

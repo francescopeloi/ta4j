@@ -26,7 +26,7 @@ package org.ta4j.core.criteria;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
-import org.ta4j.core.criteria.pnl.ReturnCriterion;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 import org.ta4j.core.num.Num;
 
 /**
@@ -37,12 +37,12 @@ import org.ta4j.core.num.Num;
  * returns over the specified number of bars:
  *
  * <pre>
- * AverageReturnPerBar = pow({@link ReturnCriterion gross return}, 1/ {@link NumberOfBarsCriterion number of bars})
+ * AverageReturnPerBar = pow({@link GrossReturnCriterion gross return}, 1/ {@link NumberOfBarsCriterion number of bars})
  * </pre>
  */
 public class AverageReturnPerBarCriterion extends AbstractAnalysisCriterion {
 
-    private final ReturnCriterion grossReturn = new ReturnCriterion();
+    private final GrossReturnCriterion grossReturn = new GrossReturnCriterion();
     private final NumberOfBarsCriterion numberOfBars = new NumberOfBarsCriterion();
 
     @Override

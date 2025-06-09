@@ -36,11 +36,12 @@ import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.AbstractCriterionTest;
 import org.ta4j.core.mocks.MockBarSeriesBuilder;
 import org.ta4j.core.num.NumFactory;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 
-public class ReturnCriterionTest extends AbstractCriterionTest {
+public class GrossReturnCriterionTest extends AbstractCriterionTest {
 
-    public ReturnCriterionTest(NumFactory numFunction) {
-        super(params -> params.length == 1 ? new ReturnCriterion((boolean) params[0]) : new ReturnCriterion(),
+    public GrossReturnCriterionTest(NumFactory numFunction) {
+        super(params -> params.length == 1 ? new GrossReturnCriterion((boolean) params[0]) : new GrossReturnCriterion(),
                 numFunction);
     }
 

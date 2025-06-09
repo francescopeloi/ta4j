@@ -41,7 +41,7 @@ import org.ta4j.core.num.Num;
  * The return of the provided {@link Position position(s)} over the provided
  * {@link BarSeries series}.
  */
-public class ReturnCriterion extends AbstractAnalysisCriterion {
+public class GrossReturnCriterion extends AbstractAnalysisCriterion {
 
     /**
      * If true, then the base percentage of {@code 1} (equivalent to 100%) is added
@@ -52,7 +52,7 @@ public class ReturnCriterion extends AbstractAnalysisCriterion {
     /**
      * Constructor with {@link #addBase} == true.
      */
-    public ReturnCriterion() {
+    public GrossReturnCriterion() {
         this.addBase = true;
     }
 
@@ -61,7 +61,7 @@ public class ReturnCriterion extends AbstractAnalysisCriterion {
      *
      * @param addBase the {@link #addBase}
      */
-    public ReturnCriterion(boolean addBase) {
+    public GrossReturnCriterion(boolean addBase) {
         this.addBase = addBase;
     }
 

@@ -37,7 +37,7 @@ import org.ta4j.core.criteria.NumberOfPositionsCriterion;
 import org.ta4j.core.criteria.PositionsRatioCriterion;
 import org.ta4j.core.criteria.ReturnOverMaxDrawdownCriterion;
 import org.ta4j.core.criteria.VersusEnterAndHoldCriterion;
-import org.ta4j.core.criteria.pnl.ReturnCriterion;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 
 import ta4jexamples.loaders.CsvTradesLoader;
 import ta4jexamples.strategies.MovingMomentumStrategy;
@@ -63,7 +63,7 @@ public class StrategyAnalysis {
          */
 
         // Total profit
-        ReturnCriterion totalReturn = new ReturnCriterion();
+        GrossReturnCriterion totalReturn = new GrossReturnCriterion();
         System.out.println("Total return: " + totalReturn.calculate(series, tradingRecord));
         // Number of bars
         System.out.println("Number of bars: " + new NumberOfBarsCriterion().calculate(series, tradingRecord));
@@ -85,7 +85,7 @@ public class StrategyAnalysis {
                 + new LinearTransactionCostCriterion(1000, 0.005).calculate(series, tradingRecord));
         // Buy-and-hold
         System.out.println("Buy-and-hold return: "
-                + new EnterAndHoldCriterion(new ReturnCriterion()).calculate(series, tradingRecord));
+                + new EnterAndHoldCriterion(new GrossReturnCriterion()).calculate(series, tradingRecord));
         // Total profit vs buy-and-hold
         System.out.println("Custom strategy return vs buy-and-hold strategy return: "
                 + new VersusEnterAndHoldCriterion(totalReturn).calculate(series, tradingRecord));
