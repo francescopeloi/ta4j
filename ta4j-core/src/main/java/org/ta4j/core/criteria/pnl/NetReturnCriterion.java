@@ -83,7 +83,8 @@ public class NetReturnCriterion extends AbstractReturnCriterion {
             grossProfit = entryPrice.minus(exitPrice).multipliedBy(amount);
         }
 
-        var txCost = entry.getCostModel().calculate(entryPrice, amount)
+        var txCost = entry.getCostModel()
+                .calculate(entryPrice, amount)
                 .plus(exit.getCostModel().calculate(exitPrice, amount));
 
         var profit = grossProfit.minus(txCost);
