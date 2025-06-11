@@ -62,17 +62,17 @@ public abstract class AbstractProfitLossPercentageCriterion extends AbstractAnal
                 .map(this::profit)
                 .reduce(zero, Num::plus);
 
-        var totalEntry = tradingRecord.getPositions()
+        var totalEntryPrice = tradingRecord.getPositions()
                 .stream()
                 .filter(Position::isClosed)
                 .map(Position::getEntry)
                 .map(Trade::getValue)
                 .reduce(zero, Num::plus);
 
-        if (totalEntry.isZero()) {
+        if (totalEntryPrice.isZero()) {
             return zero;
         }
-        return totalProfit.dividedBy(totalEntry).multipliedBy(numFactory.hundred());
+        return totalProfit.dividedBy(totalEntryPrice).multipliedBy(numFactory.hundred());
     }
 
     @Override
