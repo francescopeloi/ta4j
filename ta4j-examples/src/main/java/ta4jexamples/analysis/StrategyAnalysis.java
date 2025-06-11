@@ -67,7 +67,8 @@ public class StrategyAnalysis {
         var grossReturn = new GrossReturnCriterion().calculate(series, tradingRecord);
         System.out.println("Gross return: " + grossReturn);
 
-        var netReturn = new NetReturnCriterion().calculate(series, tradingRecord);
+        var netReturnCriterion = new NetReturnCriterion();
+        var netReturn = netReturnCriterion.calculate(series, tradingRecord);
         System.out.println("Gross return: " + netReturn);
 
         var numberOfBars = new NumberOfBarsCriterion().calculate(series, tradingRecord);
@@ -94,7 +95,7 @@ public class StrategyAnalysis {
         var enterAndHold = EnterAndHoldCriterion.EnterAndHoldReturnCriterion().calculate(series, tradingRecord);
         System.out.println("Buy-and-hold return: " + enterAndHold);
 
-        var versusEnterAndHold = new VersusEnterAndHoldCriterion(new NetReturnCriterion()).calculate(series, tradingRecord);
+        var versusEnterAndHold = new VersusEnterAndHoldCriterion(netReturnCriterion).calculate(series, tradingRecord);
         System.out.println("Custom strategy return vs buy-and-hold strategy return: " + versusEnterAndHold);
     }
 
