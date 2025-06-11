@@ -38,7 +38,6 @@ import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
-
 import ta4jexamples.loaders.CsvTradesLoader;
 
 /**
@@ -100,6 +99,7 @@ public class MovingMomentumStrategy {
         System.out.println("Number of positions for the strategy: " + tradingRecord.getPositionCount());
 
         // Analysis
-        System.out.println("Total profit for the strategy: " + new GrossReturnCriterion().calculate(series, tradingRecord));
+        var grossReturn = new GrossReturnCriterion().calculate(series, tradingRecord);
+        System.out.println("Total profit for the strategy: " + grossReturn);
     }
 }

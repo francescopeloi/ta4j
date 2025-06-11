@@ -50,13 +50,12 @@ public class NetReturnCriterion extends AbstractReturnCriterion {
 
     @Override
     protected Num calculateReturn(BarSeries series, Position position) {
-        var entryValue = position.getEntry().getNetPrice()
-                .multipliedBy(position.getEntry().getAmount());
+        var entryValue = position.getEntry().getNetPrice().multipliedBy(position.getEntry().getAmount());
         if (entryValue.isZero()) {
             return series.numFactory().one();
         }
         var profit = position.getProfit();
         return profit.dividedBy(entryValue).plus(series.numFactory().one());
     }
-  
+
 }

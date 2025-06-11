@@ -85,6 +85,7 @@ public class CCICorrectionStrategy {
         System.out.println("Number of positions for the strategy: " + tradingRecord.getPositionCount());
 
         // Analysis
-        System.out.println("Total return for the strategy: " + new GrossReturnCriterion().calculate(series, tradingRecord));
+        var grossReturn = new GrossReturnCriterion().calculate(series, tradingRecord);
+        System.out.println("Total return for the strategy: " + grossReturn);
     }
 }

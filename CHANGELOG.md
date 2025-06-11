@@ -13,7 +13,7 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - Refactor ProfitLossPercentageCriterion to calculate aggregated return
 
 ### Changed
-- `AverageReturnPerBarCriterion` and `ReturnOverMaxDrawdownCriterion` now rely on `NetReturnCriterion` for calculations
+- Use `NetReturnCriterion` in `AverageReturnPerBarCriterion`, `EnterAndHoldCriterion` and `ReturnOverMaxDrawdownCriterion` to avoid optimistic bias of `GrossReturnCriterion`
 
 ### Removed/Deprecated
 

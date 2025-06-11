@@ -50,22 +50,22 @@ public class AverageReturnPerBarCriterion extends AbstractAnalysisCriterion {
         var bars = numberOfBars.calculate(series, position);
         // If a simple division was used (net return/bars), compounding would not be
         // considered, leading to inaccuracies in the calculation.
-        // Therefore we need to use "pow" to accurately capture the compounding effect.
+        // Therefore, we need to use "pow" to accurately capture the compounding effect.
+        var one = series.numFactory().one();
         if (bars.isZero()) {
-            return series.numFactory().one();
+            return one;
         }
-        return netReturn.calculate(series, position)
-                .pow(series.numFactory().one().dividedBy(bars));
+        return netReturn.calculate(series, position).pow(one.dividedBy(bars));
     }
 
     @Override
     public Num calculate(BarSeries series, TradingRecord tradingRecord) {
         var bars = numberOfBars.calculate(series, tradingRecord);
+        var one = series.numFactory().one();
         if (bars.isZero()) {
-            return series.numFactory().one();
+            return one;
         }
-        return netReturn.calculate(series, tradingRecord)
-                .pow(series.numFactory().one().dividedBy(bars));
+        return netReturn.calculate(series, tradingRecord).pow(one.dividedBy(bars));
     }
 
     /** The higher the criterion value, the better. */
