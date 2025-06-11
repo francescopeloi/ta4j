@@ -410,8 +410,8 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - :tada: **Enhancement** added **`NetProfitCriterion.class`**.
 - :tada: **Enhancement** added chooseBest() method with parameter tradeType in AnalysisCriterion.
 - :tada: **Enhancement** added **`AverageLossCriterion.class`**.
-- :tada: **Enhancement** added **`ProfitLossRatioCriterion.class`**.
 - :tada: **Enhancement** added **`AverageProfitCriterion.class`**.
+- :tada: **Enhancement** added **`ProfitLossRatioCriterion.class`**.
 - :tada: **Enhancement** added **`ExpectancyCriterion.class`**.
 - :tada: **Enhancement** added **`ConsecutiveWinningPositionsCriterion.class`**.
 - :tada: **Enhancement** added **`LosingPositionsRatioCriterion.class`**
