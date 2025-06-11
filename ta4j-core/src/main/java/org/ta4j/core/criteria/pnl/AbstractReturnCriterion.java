@@ -28,6 +28,7 @@ import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.AbstractAnalysisCriterion;
 import org.ta4j.core.num.Num;
+import org.ta4j.core.num.NumFactory;
 
 /**
  * Base class for return based criteria.
@@ -64,10 +65,11 @@ public abstract class AbstractReturnCriterion extends AbstractAnalysisCriterion 
         if (position.isClosed()) {
             return calculateReturn(series, position);
         }
+        var numFactory = series.numFactory();
         if (addBase) {
-            return series.numFactory().one();
+            return numFactory.one();
         }
-        return series.numFactory().zero();
+        return numFactory.zero();
     }
 
     @Override
