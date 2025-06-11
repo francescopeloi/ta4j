@@ -65,7 +65,8 @@ public class AverageReturnPerBarCriterion extends AbstractAnalysisCriterion {
         if (bars.isZero()) {
             return one;
         }
-        return netReturn.calculate(series, tradingRecord).pow(one.dividedBy(bars));
+        var netReturn = this.netReturn.calculate(series, tradingRecord);
+        return netReturn.pow(one.dividedBy(bars));
     }
 
     /** The higher the criterion value, the better. */
