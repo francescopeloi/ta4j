@@ -48,27 +48,27 @@ public abstract class AbstractProfitLossRatioCriterion extends AbstractAnalysisC
 
     @Override
     public Num calculate(BarSeries series, Position position) {
-        var avgProfit = averageProfitCriterion.calculate(series, position);
-        var avgLoss = averageLossCriterion.calculate(series, position);
-        return calculateRatio(series, avgProfit, avgLoss);
+        var averageProfit = averageProfitCriterion.calculate(series, position);
+        var averageLoss = averageLossCriterion.calculate(series, position);
+        return calculateRatio(series, averageProfit, averageLoss);
     }
 
     @Override
     public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        var avgProfit = averageProfitCriterion.calculate(series, tradingRecord);
-        var avgLoss = averageLossCriterion.calculate(series, tradingRecord);
-        return calculateRatio(series, avgProfit, avgLoss);
+        var averageProfit = averageProfitCriterion.calculate(series, tradingRecord);
+        var averageLoss = averageLossCriterion.calculate(series, tradingRecord);
+        return calculateRatio(series, averageProfit, averageLoss);
     }
 
-    private Num calculateRatio(BarSeries series, Num avgProfit, Num avgLoss) {
+    private Num calculateRatio(BarSeries series, Num averageProfit, Num averageLoss) {
         var numFactory = series.numFactory();
-        if (avgProfit.isZero()) {
+        if (averageProfit.isZero()) {
             return numFactory.zero();
         }
-        if (avgLoss.isZero()) {
+        if (averageLoss.isZero()) {
             return numFactory.one();
         }
-        return avgProfit.dividedBy(avgLoss).abs();
+        return averageProfit.dividedBy(averageLoss).abs();
     }
 
     @Override
