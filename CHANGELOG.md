@@ -4,6 +4,7 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 
 ### Breaking
 - Refactored `ProfitLossCriterion`, `ProfitCriterion`, `LossCriterion`, `AverageProfitCriterion` and `AverageLossCriterion` criteria into their net and gross concrete classes
+- Replaced `ReturnCriterion` with new `GrossReturnCriterion` and `NetReturnCriterion` built on `AbstractReturnCriterion`. Tests now reuse `AbstractPnlCriterionTest`.
 
 ### Fixed
 - Updated Github test workflow to cache dependencies for quicker builds
@@ -13,6 +14,8 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - Refactor ProfitLossPercentageCriterion to calculate aggregated return
 
 ### Changed
+- `AverageReturnPerBarCriterion` and `ReturnOverMaxDrawdownCriterion` now rely on
+  `NetReturnCriterion` for calculations
 
 ### Removed/Deprecated
 

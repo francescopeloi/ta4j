@@ -25,8 +25,6 @@ package org.ta4j.core.criteria.pnl;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
-import org.ta4j.core.criteria.AbstractAnalysisCriterion;
 import org.ta4j.core.num.Num;
 
 /**
@@ -41,61 +39,19 @@ import org.ta4j.core.num.Num;
  * The return of the provided {@link Position position(s)} over the provided
  * {@link BarSeries series}.
  */
-public class GrossReturnCriterion extends AbstractAnalysisCriterion {
+public class GrossReturnCriterion extends AbstractReturnCriterion {
 
-    /**
-     * If true, then the base percentage of {@code 1} (equivalent to 100%) is added
-     * to the criterion value.
-     */
-    private final boolean addBase;
-
-    /**
-     * Constructor with {@link #addBase} == true.
-     */
     public GrossReturnCriterion() {
-        this.addBase = true;
+        super();
     }
 
-    /**
-     * Constructor.
-     *
-     * @param addBase the {@link #addBase}
-     */
     public GrossReturnCriterion(boolean addBase) {
-        this.addBase = addBase;
+        super(addBase);
     }
 
     @Override
-    public Num calculate(BarSeries series, Position position) {
-        return calculateProfit(series, position);
+    protected Num calculateReturn(BarSeries series, Position position) {
+        return position.getGrossReturn(series);
     }
-
-    @Override
-    public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        return tradingRecord.getPositions()
-                .stream()
-                .map(position -> calculateProfit(series, position))
-                .reduce(series.numFactory().one(), Num::multipliedBy)
-                .minus(addBase ? series.numFactory().zero() : series.numFactory().one());
-    }
-
-    /** The higher the criterion value, the better. */
-    @Override
-    public boolean betterThan(Num criterionValue1, Num criterionValue2) {
-        return criterionValue1.isGreaterThan(criterionValue2);
-    }
-
-    /**
-     * Calculates the gross return of a position (Buy and sell).
-     *
-     * @param series   a bar series
-     * @param position a position
-     * @return the gross return of the position
-     */
-    private Num calculateProfit(BarSeries series, Position position) {
-        if (position.isClosed()) {
-            return position.getGrossReturn(series);
-        }
-        return addBase ? series.numFactory().one() : series.numFactory().zero();
-    }
+  
 }

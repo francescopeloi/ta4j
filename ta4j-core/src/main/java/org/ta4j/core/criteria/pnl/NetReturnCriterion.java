@@ -25,8 +25,6 @@ package org.ta4j.core.criteria.pnl;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
-import org.ta4j.core.criteria.AbstractAnalysisCriterion;
 import org.ta4j.core.num.Num;
 
 /**
@@ -41,67 +39,24 @@ import org.ta4j.core.num.Num;
  * The return of the provided {@link Position position(s)} over the provided
  * {@link BarSeries series}.
  */
-public class NetReturnCriterion extends AbstractAnalysisCriterion {
-
-    /**
-     * If true, then the base percentage of {@code 1} (equivalent to 100%) is added
-     * to the criterion value.
-     */
-    private final boolean addBase;
-
-    /**
-     * Constructor with {@link #addBase} == true.
-     */
+public class NetReturnCriterion extends AbstractReturnCriterion {
     public NetReturnCriterion() {
-        this.addBase = true;
+        super();
     }
 
-    /**
-     * Constructor.
-     *
-     * @param addBase the {@link #addBase}
-     */
     public NetReturnCriterion(boolean addBase) {
-        this.addBase = addBase;
+        super(addBase);
     }
 
     @Override
-    public Num calculate(BarSeries series, Position position) {
-        return calculateProfit(series, position);
-    }
-
-    @Override
-    public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        return tradingRecord.getPositions()
-                .stream()
-                .map(position -> calculateProfit(series, position))
-                .reduce(series.numFactory().one(), Num::multipliedBy)
-                .minus(addBase ? series.numFactory().zero() : series.numFactory().one());
-    }
-
-    /** The higher the criterion value, the better. */
-    @Override
-    public boolean betterThan(Num criterionValue1, Num criterionValue2) {
-        return criterionValue1.isGreaterThan(criterionValue2);
-    }
-
-    /**
-     * Calculates the net return of a position (Buy and sell).
-     *
-     * @param series   a bar series
-     * @param position a position
-     * @return the net return of the position
-     */
-    private Num calculateProfit(BarSeries series, Position position) {
-        if (position.isClosed()) {
-            Num entryValue = position.getEntry().getNetPrice()
-                    .multipliedBy(position.getEntry().getAmount());
-            if (entryValue.isZero()) {
-                return series.numFactory().one();
-            }
-            Num profit = position.getProfit();
-            return profit.dividedBy(entryValue).plus(series.numFactory().one());
+    protected Num calculateReturn(BarSeries series, Position position) {
+        var entryValue = position.getEntry().getNetPrice()
+                .multipliedBy(position.getEntry().getAmount());
+        if (entryValue.isZero()) {
+            return series.numFactory().one();
         }
-        return addBase ? series.numFactory().one() : series.numFactory().zero();
+        var profit = position.getProfit();
+        return profit.dividedBy(entryValue).plus(series.numFactory().one());
     }
+  
 }
