@@ -33,7 +33,7 @@ import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.criteria.PositionsRatioCriterion;
 import org.ta4j.core.criteria.ReturnOverMaxDrawdownCriterion;
 import org.ta4j.core.criteria.VersusEnterAndHoldCriterion;
-import org.ta4j.core.criteria.pnl.ReturnCriterion;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 import org.ta4j.core.indicators.averages.SMAIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.Num;
@@ -106,7 +106,7 @@ public class Quickstart {
         System.out.println("Return over Max Drawdown: " + romad.calculate(series, tradingRecord));
 
         // Total return of our strategy vs total return of a buy-and-hold strategy
-        AnalysisCriterion vsBuyAndHold = new VersusEnterAndHoldCriterion(new ReturnCriterion());
+        AnalysisCriterion vsBuyAndHold = new VersusEnterAndHoldCriterion(new GrossReturnCriterion());
         System.out.println("Our return vs buy-and-hold return: " + vsBuyAndHold.calculate(series, tradingRecord));
 
         // Your turn!
