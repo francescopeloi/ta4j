@@ -3,7 +3,7 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 ## 0.19
 
 ### Breaking
-- Refactored `ProfitLossCriterion`, `ProfitCriterion`, `LossCriterion`, `AverageProfitCriterion`, `AverageLossCriterion` and `ReturnCriterion` criteria into their net and gross concrete classes
+- Refactored `ProfitLossCriterion`, `ProfitCriterion`, `LossCriterion`, `AverageProfitCriterion`, `AverageLossCriterion`, `ReturnCriterion` and `ProfitLossRatioCriterion` criteria into their net and gross concrete classes
 
 ### Fixed
 - Updated Github test workflow to cache dependencies for quicker builds
@@ -411,7 +411,6 @@ Changelog for `ta4j`, roughly following [keepachangelog.com](http://keepachangel
 - :tada: **Enhancement** added chooseBest() method with parameter tradeType in AnalysisCriterion.
 - :tada: **Enhancement** added **`AverageLossCriterion.class`**.
 - :tada: **Enhancement** added **`AverageProfitCriterion.class`**.
-- :tada: **Enhancement** added **`NetProfitLossRatioCriterion.class`** and **`GrossProfitLossRatioCriterion.class`**.
 - :tada: **Enhancement** added **`ExpectancyCriterion.class`**.
 - :tada: **Enhancement** added **`ConsecutiveWinningPositionsCriterion.class`**.
 - :tada: **Enhancement** added **`LosingPositionsRatioCriterion.class`**
