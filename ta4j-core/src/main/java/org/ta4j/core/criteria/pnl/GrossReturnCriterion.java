@@ -53,4 +53,5 @@ public class GrossReturnCriterion extends AbstractReturnCriterion {
     protected Num calculateReturn(BarSeries series, Position position) {
         return position.getGrossReturn(series);
     }
+  
 }

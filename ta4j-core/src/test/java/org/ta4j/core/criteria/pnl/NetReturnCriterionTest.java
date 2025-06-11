@@ -59,4 +59,5 @@ public class NetReturnCriterionTest extends AbstractPnlCriterionTest {
     protected void handleCalculateWithOpenedPosition(Num result) {
         assertNumEquals(1.10, result);
     }
+  
 }

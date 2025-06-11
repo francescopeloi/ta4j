@@ -58,4 +58,5 @@ public class NetReturnCriterion extends AbstractReturnCriterion {
         var profit = position.getProfit();
         return profit.dividedBy(entryValue).plus(series.numFactory().one());
     }
+  
 }
