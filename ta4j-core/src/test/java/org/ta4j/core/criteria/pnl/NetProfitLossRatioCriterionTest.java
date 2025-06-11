@@ -82,4 +82,9 @@ public class NetProfitLossRatioCriterionTest extends AbstractPnlCriterionTest {
     protected void handleCalculateWithOpenedPosition(Num result) {
         assertNumEquals(1, result);
     }
+
+    @Override
+    protected void handleCalculateWithNoPositions(Num result) {
+        assertNumEquals(0, result);
+    }
 }
