@@ -60,4 +60,9 @@ public class GrossReturnCriterionTest extends AbstractPnlCriterionTest {
         assertNumEquals(1.10, result);
     }
 
+    @Override
+    protected void handleCalculateWithNoPositions(Num result) {
+        assertNumEquals(0, result);
+    }
+
 }
