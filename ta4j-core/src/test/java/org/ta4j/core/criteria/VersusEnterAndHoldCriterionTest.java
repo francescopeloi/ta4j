@@ -89,8 +89,8 @@ public class VersusEnterAndHoldCriterionTest extends AbstractCriterionTest {
     @Test
     public void calculateWithAverageProfit() {
         var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 95, 100, 80, 85, 130).build();
-        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, NaN, NaN), Trade.sellAt(1, NaN, NaN),
-                Trade.buyAt(2, NaN, NaN), Trade.sellAt(5, NaN, NaN));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, series), Trade.sellAt(1, series),
+                Trade.buyAt(2, series), Trade.sellAt(5, series));
 
         var buyAndHold = getCriterion(new AverageReturnPerBarCriterion());
 
@@ -106,7 +106,8 @@ public class VersusEnterAndHoldCriterionTest extends AbstractCriterionTest {
 
         var buyAndHold = getCriterion(new NumberOfBarsCriterion());
 
-        assertNumEquals(6d / 6d, buyAndHold.calculate(series, tradingRecord));
+        // 6d / 6d
+        assertNumEquals(1.0, buyAndHold.calculate(series, tradingRecord));
     }
 
     @Test

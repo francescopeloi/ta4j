@@ -51,44 +51,15 @@ public class NetReturnCriterion extends AbstractReturnCriterion {
 
     @Override
     protected Num calculateReturn(BarSeries series, Position position) {
-        var one = series.numFactory().one();
-
-        // open positions are ignored and return the base value
-        if (!position.isClosed()) {
-            return one;
-        }
-
         var entry = position.getEntry();
-        var exit = position.getExit();
-
-        // default to an amount of one if none was specified
         var amount = entry.getAmount();
-        if (amount.isNaN()) {
-            amount = one;
-        }
-
-        // use bar close prices if the trade price is NaN
-        var entryPrice = entry.getPricePerAsset(series);
-        var exitPrice = exit.getPricePerAsset(series);
-
-        var entryValue = entryPrice.multipliedBy(amount);
+        var netPrice = entry.getNetPrice();
+        var entryValue = netPrice.multipliedBy(amount);
+        var one = series.numFactory().one();
         if (entryValue.isZero()) {
             return one;
         }
-
-        Num grossProfit;
-        if (entry.isBuy()) {
-            grossProfit = exitPrice.minus(entryPrice).multipliedBy(amount);
-        } else {
-            grossProfit = entryPrice.minus(exitPrice).multipliedBy(amount);
-        }
-
-        var txCost = entry.getCostModel()
-                .calculate(entryPrice, amount)
-                .plus(exit.getCostModel().calculate(exitPrice, amount));
-
-        var profit = grossProfit.minus(txCost);
-
+        var profit = position.getProfit();
         return profit.dividedBy(entryValue).plus(one);
     }
 
