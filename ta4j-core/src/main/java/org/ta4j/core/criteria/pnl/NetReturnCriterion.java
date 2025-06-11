@@ -25,6 +25,7 @@ package org.ta4j.core.criteria.pnl;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
+import org.ta4j.core.Trade;
 import org.ta4j.core.num.Num;
 
 /**
@@ -50,12 +51,16 @@ public class NetReturnCriterion extends AbstractReturnCriterion {
 
     @Override
     protected Num calculateReturn(BarSeries series, Position position) {
-        var entryValue = position.getEntry().getNetPrice().multipliedBy(position.getEntry().getAmount());
+        var entry = position.getEntry();
+        var amount = entry.getAmount();
+        var netPrice = entry.getNetPrice();
+        var entryValue = netPrice.multipliedBy(amount);
+        var one = series.numFactory().one();
         if (entryValue.isZero()) {
-            return series.numFactory().one();
+            return one;
         }
         var profit = position.getProfit();
-        return profit.dividedBy(entryValue).plus(series.numFactory().one());
+        return profit.dividedBy(entryValue).plus(one);
     }
 
 }
