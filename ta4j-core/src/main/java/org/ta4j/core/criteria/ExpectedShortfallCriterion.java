@@ -25,6 +25,7 @@ package org.ta4j.core.criteria;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
@@ -90,13 +91,25 @@ public class ExpectedShortfallCriterion extends AbstractAnalysisCriterion {
         int nInBody = (int) (returns.getSize() * confidence);
         int nInTail = returns.getSize() - nInBody;
 
-        // calculate average tail loss
-        Collections.sort(returnRates);
-        List<Num> tailEvents = returnRates.subList(0, nInTail);
-        Num sum = zero;
-        for (int i = 0; i < nInTail; i++) {
-            sum = sum.plus(tailEvents.get(i));
+        if (nInTail <= 0) {
+            return zero;
         }
+
+        // calculate average tail loss without sorting entire list
+        // keep only the n smallest values using a max heap
+        PriorityQueue<Num> smallest = new PriorityQueue<>(nInTail, Collections.reverseOrder());
+        for (Num r : returnRates) {
+            smallest.offer(r);
+            if (smallest.size() > nInTail) {
+                smallest.poll();
+            }
+        }
+
+        Num sum = zero;
+        for (Num r : smallest) {
+            sum = sum.plus(r);
+        }
+
         expectedShortfall = sum.dividedBy(returns.getBarSeries().numFactory().numOf(nInTail));
 
         // ES is non-positive
