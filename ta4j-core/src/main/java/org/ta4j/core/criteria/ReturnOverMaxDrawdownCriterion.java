@@ -28,7 +28,6 @@ import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.pnl.NetReturnCriterion;
-import org.ta4j.core.num.NaN;
 import org.ta4j.core.num.Num;
 
 /**
@@ -46,24 +45,28 @@ public class ReturnOverMaxDrawdownCriterion extends AbstractAnalysisCriterion {
 
     @Override
     public Num calculate(BarSeries series, Position position) {
-        var maxDrawdown = maxDrawdownCriterion.calculate(series, position);
-        if (maxDrawdown.isZero()) {
-            return NaN.NaN;
-        } else {
-            var totalProfit = netReturnCriterion.calculate(series, position);
-            return totalProfit.dividedBy(maxDrawdown);
+        if (position == null || !position.isClosed()) {
+            return series.numFactory().zero();
         }
+        var maxDrawdown = maxDrawdownCriterion.calculate(series, position);
+        var netReturn = netReturnCriterion.calculate(series, position);
+        if (maxDrawdown.isZero()) {
+            return netReturn;
+        }
+        return netReturn.dividedBy(maxDrawdown);
     }
 
     @Override
     public Num calculate(BarSeries series, TradingRecord tradingRecord) {
-        var maxDrawdown = maxDrawdownCriterion.calculate(series, tradingRecord);
-        if (maxDrawdown.isZero()) {
-            return NaN.NaN;
-        } else {
-            var totalProfit = netReturnCriterion.calculate(series, tradingRecord);
-            return totalProfit.dividedBy(maxDrawdown);
+        if (tradingRecord.getPositions().isEmpty()) {
+            return series.numFactory().zero();
         }
+        var maxDrawdown = maxDrawdownCriterion.calculate(series, tradingRecord);
+        var netReturn = netReturnCriterion.calculate(series, tradingRecord);
+        if (maxDrawdown.isZero()) {
+            return netReturn;
+        }
+        return netReturn.dividedBy(maxDrawdown);
     }
 
     /** The higher the criterion value, the better. */

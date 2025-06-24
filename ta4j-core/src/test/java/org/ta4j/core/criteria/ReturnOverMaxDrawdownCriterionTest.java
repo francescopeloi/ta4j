@@ -35,7 +35,6 @@ import org.ta4j.core.Position;
 import org.ta4j.core.Trade;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.mocks.MockBarSeriesBuilder;
-import org.ta4j.core.num.NaN;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
@@ -72,13 +71,13 @@ public class ReturnOverMaxDrawdownCriterionTest extends AbstractCriterionTest {
         var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1, 2, 3, 6, 8, 20, 3).build();
         TradingRecord tradingRecord = new BaseTradingRecord(Trade.buyAt(0, series), Trade.sellAt(1, series),
                 Trade.buyAt(2, series), Trade.sellAt(5, series));
-        assertTrue(rrc.calculate(series, tradingRecord).isNaN());
+        assertNumEquals(40d / 3d, rrc.calculate(series, tradingRecord));
     }
 
     @Test
     public void rewardRiskRatioCriterionWithNoPositions() {
         var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1, 2, 3, 6, 8, 20, 3).build();
-        assertTrue(rrc.calculate(series, new BaseTradingRecord()).isNaN());
+        assertNumEquals(0d, rrc.calculate(series, new BaseTradingRecord()));
     }
 
     @Test
@@ -109,7 +108,7 @@ public class ReturnOverMaxDrawdownCriterionTest extends AbstractCriterionTest {
 
         final Num result = rrc.calculate(series, tradingRecord);
 
-        assertNumEquals(NaN.NaN, result);
+        assertNumEquals(105d / 100d * 100d / 95d, result);
     }
 
     @Test
@@ -121,6 +120,17 @@ public class ReturnOverMaxDrawdownCriterionTest extends AbstractCriterionTest {
 
         final Num result = rrc.calculate(series, position);
 
-        assertNumEquals(NaN.NaN, result);
+        assertNumEquals(105d / 100d, result);
+    }
+
+    @Test
+    public void testOpenPositionReturnsZero() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory)
+                .withData(100, 105, 95, 100)
+                .build();
+        Position position = new Position();
+        position.operate(0, series.getBar(0).getClosePrice(), series.numOf(1));
+
+        assertNumEquals(0d, rrc.calculate(series, position));
     }
 }
