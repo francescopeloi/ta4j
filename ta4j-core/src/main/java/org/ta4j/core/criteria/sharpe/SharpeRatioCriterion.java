@@ -21,7 +21,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.ta4j.core.criteria;
+package org.ta4j.core.criteria.sharpe;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -36,6 +36,9 @@ import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.analysis.CashFlow;
+import org.ta4j.core.criteria.AbstractAnalysisCriterion;
+import org.ta4j.core.criteria.sharpe.model.Annualization;
+import org.ta4j.core.criteria.sharpe.model.Sampling;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
@@ -93,14 +96,6 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
 
     private static final double SECONDS_PER_YEAR = 365.2425d * 24 * 3600;
     private static final WeekFields ISO_WEEK_FIELDS = WeekFields.of(Locale.ROOT);
-
-    public enum Sampling {
-        PER_BAR, DAILY, WEEKLY, MONTHLY
-    }
-
-    public enum Annualization {
-        PERIOD, ANNUALIZED
-    }
 
     private final Num annualRiskFreeRate;
     private final Sampling sampling;
@@ -164,7 +159,7 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
             return zero;
         }
 
-        var pairs = indexPairs(series, anchorIndex, start, end);
+        var pairs = Sampling.indexPairs(sampling, groupingZoneId, series, anchorIndex, start, end);
 
         var acc = pairs.reduce(Acc.empty(zero),
                 (a, p) -> a.add(excessReturn(series, cashFlow, p.previousIndex(), p.currentIndex()),
@@ -192,55 +187,6 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
         }
 
         return sharpePerPeriod.multipliedBy(numFactory.numOf(annualizationFactor));
-    }
-
-    private Stream<IndexPair> indexPairs(BarSeries series, int anchorIndex, int start, int end) {
-        if (sampling == Sampling.PER_BAR) {
-            return IntStream.rangeClosed(start, end).mapToObj(i -> new IndexPair(i - 1, i));
-        }
-
-        var periodEndIndices = periodEndIndices(series, start, end).toArray();
-        if (periodEndIndices.length == 0) {
-            return Stream.empty();
-        }
-
-        var firstPair = Stream.of(new IndexPair(anchorIndex, periodEndIndices[0]));
-        var consecutivePairs = IntStream.range(1, periodEndIndices.length)
-                .mapToObj(k -> new IndexPair(periodEndIndices[k - 1], periodEndIndices[k]));
-
-        return Stream.concat(firstPair, consecutivePairs);
-    }
-
-    private IntStream periodEndIndices(BarSeries series, int start, int end) {
-        return IntStream.rangeClosed(start, end).filter(i -> isPeriodEnd(series, i, end));
-    }
-
-    private boolean isPeriodEnd(BarSeries series, int index, int endIndex) {
-        if (index == endIndex) {
-            return true;
-        }
-
-        var now = endTimeZoned(series, index);
-        var next = endTimeZoned(series, index + 1);
-
-        return switch (sampling) {
-        case DAILY -> !now.toLocalDate().equals(next.toLocalDate());
-        case WEEKLY -> !sameIsoWeek(now, next);
-        case MONTHLY -> !YearMonth.from(now).equals(YearMonth.from(next));
-        case PER_BAR -> true;
-        };
-    }
-
-    private boolean sameIsoWeek(ZonedDateTime a, ZonedDateTime b) {
-        var weekA = a.get(ISO_WEEK_FIELDS.weekOfWeekBasedYear());
-        var weekB = b.get(ISO_WEEK_FIELDS.weekOfWeekBasedYear());
-        var yearA = a.get(ISO_WEEK_FIELDS.weekBasedYear());
-        var yearB = b.get(ISO_WEEK_FIELDS.weekBasedYear());
-        return weekA == weekB && yearA == yearB;
-    }
-
-    private ZonedDateTime endTimeZoned(BarSeries series, int index) {
-        return endTimeInstant(series, index).atZone(groupingZoneId);
     }
 
     private Instant endTimeInstant(BarSeries series, int index) {

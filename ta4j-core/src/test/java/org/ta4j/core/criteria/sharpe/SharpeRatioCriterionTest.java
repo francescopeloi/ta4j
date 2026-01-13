@@ -21,7 +21,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.ta4j.core.criteria;
+package org.ta4j.core.criteria.sharpe;
 
 import java.time.*;
 import java.time.temporal.WeekFields;
@@ -34,8 +34,9 @@ import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
 import org.ta4j.core.BaseTradingRecord;
 import org.ta4j.core.TradingRecord;
-import static org.ta4j.core.criteria.SharpeRatioCriterion.Annualization;
-import static org.ta4j.core.criteria.SharpeRatioCriterion.Sampling;
+import org.ta4j.core.criteria.AbstractCriterionTest;
+import org.ta4j.core.criteria.sharpe.model.Annualization;
+import org.ta4j.core.criteria.sharpe.model.Sampling;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
