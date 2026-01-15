@@ -1,5 +1,7 @@
 package org.ta4j.core.criteria.sharpe;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
@@ -15,7 +17,7 @@ import org.ta4j.core.num.Num;
 
 public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion {
 
-    private static final WeekFields ISO_WEEK_FIELDS = WeekFields.of(Locale.ROOT);
+    private static final double SECONDS_PER_YEAR = 365.2425d * 24 * 3600;
 
     private final Num annualRiskFreeRate;
     private final Sampling sampling;
@@ -120,10 +122,33 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
     }
 
     private Num excessReturn(BarSeries series, CashFlow cashFlow, int previousIndex, int currentIndex) {
-        var one = series.numFactory().one();
-        var grossReturn = cashFlow.getValue(currentIndex).dividedBy(cashFlow.getValue(previousIndex)).minus(one);
-        var riskFree = series.numFactory().zero(); // keep it 0 here unless you also want PSR to subtract RF at return level
-        return grossReturn.minus(riskFree);
+        var numFactory = series.numFactory();
+        var one = numFactory.one();
+        var eReturn = cashFlow.getValue(currentIndex).dividedBy(cashFlow.getValue(previousIndex)).minus(one);
+        return eReturn.minus(periodRiskFree(series, previousIndex, currentIndex));
+    }
+
+    private Num periodRiskFree(BarSeries series, int previousIndex, int currentIndex) {
+        var numFactory = series.numFactory();
+        var deltaYears = deltaYears(series, previousIndex, currentIndex);
+        if (deltaYears <= 0.0) {
+            return numFactory.zero();
+        }
+
+        var annual = (annualRiskFreeRate == null) ? 0.0 : annualRiskFreeRate.doubleValue();
+        var per = Math.pow(1.0 + annual, deltaYears) - 1.0;
+        return numFactory.numOf(per);
+    }
+
+    private double deltaYears(BarSeries series, int previousIndex, int currentIndex) {
+        var endPrev = endTimeInstant(series, previousIndex);
+        var endNow = endTimeInstant(series, currentIndex);
+        var seconds = Math.max(0, Duration.between(endPrev, endNow).getSeconds());
+        return seconds <= 0 ? 0.0 : seconds / SECONDS_PER_YEAR;
+    }
+
+    private Instant endTimeInstant(BarSeries series, int index) {
+        return series.getBar(index).getEndTime();
     }
 
     private double standardNormalCdf(double z) {

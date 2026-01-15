@@ -223,9 +223,6 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
         return a.isGreaterThan(b);
     }
 
-    private record IndexPair(int previousIndex, int currentIndex) {
-    }
-
     private record Acc(Stats stats, double deltaYearsSum, int deltaCount) {
 
         static Acc empty(Num zero) {
