@@ -1,6 +1,7 @@
 package org.ta4j.core.criteria.sharpe;
 
 import java.time.ZoneId;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
@@ -8,11 +9,14 @@ import org.ta4j.core.TradingRecord;
 import org.ta4j.core.analysis.CashFlow;
 import org.ta4j.core.criteria.AbstractAnalysisCriterion;
 import org.ta4j.core.criteria.sharpe.helpers.Annualization;
+import org.ta4j.core.criteria.sharpe.helpers.Moments;
 import org.ta4j.core.criteria.sharpe.helpers.Sampling;
 import org.ta4j.core.criteria.sharpe.helpers.SharpeRatioReturnSeries;
 import org.ta4j.core.num.Num;
 
 public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion {
+
+    private static final NormalDistribution STANDARD_NORMAL_DISTRIBUTION = new NormalDistribution(null, 0.0, 1.0);
 
     private final Num annualRiskFreeRate;
     private final Sampling sampling;
@@ -75,12 +79,12 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
                 1.0 - moments.skewness() * sharpe + ((moments.kurtosis() - 1.0) / 4.0) * sharpe * sharpe
         );
 
-        if (!(denominator > 0.0) || Double.isNaN(denominator) || Double.isInfinite(denominator)) {
+        if (!(denominator > 0.0) || Double.isInfinite(denominator)) {
             return zero;
         }
 
         var z = numerator / denominator;
-        var psr = standardNormalCdf(z); // TODO: implement Φ(z)
+        var psr = standardNormalCdf(z);
 
         return series.numFactory().numOf(psr);
     }
@@ -122,25 +126,30 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
                 1.0 - moments.skewness() * sharpe + ((moments.kurtosis() - 1.0) / 4.0) * sharpe * sharpe
         );
 
-        if (!(denominator > 0.0) || Double.isNaN(denominator) || Double.isInfinite(denominator)) {
+        if (!(denominator > 0.0) || Double.isInfinite(denominator)) {
             return zero;
         }
 
         var z = numerator / denominator;
-        var psr = standardNormalCdf(z); // TODO
+        var psr = standardNormalCdf(z);
 
         return series.numFactory().numOf(psr);
     }
 
     private double standardNormalCdf(double z) {
-        throw new UnsupportedOperationException("TODO: implement Φ(z)");
-    }
-
-    private record Moments(double mean, double skewness, double kurtosis) {
-
-        static Moments from(double[] values) {
-            throw new UnsupportedOperationException("TODO: implement mean, skewness, kurtosis");
+        if (Double.isNaN(z)) {
+            return 0.0;
         }
+        if (!Double.isFinite(z)) {
+            return z > 0.0 ? 1.0 : 0.0;
+        }
+        if (z <= -8.0) {
+            return 0.0;
+        }
+        if (z >= 8.0) {
+            return 1.0;
+        }
+        return STANDARD_NORMAL_DISTRIBUTION.cumulativeProbability(z);
     }
 
     @Override
