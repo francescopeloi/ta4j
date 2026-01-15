@@ -1,6 +1,8 @@
 package org.ta4j.core.criteria.sharpe;
 
 import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.BarSeries;
@@ -27,8 +29,8 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
     public ProbabilisticSharpeRatioCriterion(
             Num annualRiskFreeRate,
             Sampling sampling,
-            Num sharpeThreshold,
-            ZoneId groupingZoneId
+            ZoneId groupingZoneId,
+            Num sharpeThreshold
     ) {
         this.annualRiskFreeRate = annualRiskFreeRate;
         this.sampling = sampling;
@@ -71,19 +73,16 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
             return zero;
         }
 
-        var moments = Moments.from(excessReturns); // TODO: implement (mean, skewness, kurtosis)
-        var t = excessReturns.length;
+        var moments = Moments.from(excessReturns);
+        var sampleSize = excessReturns.length;
+        var sharpeNull = sharpeThreshold.doubleValue();
+        var autocorrelation = lag1Autocorrelation(excessReturns, moments.mean());
+        var sigmaSharpeNull = sigmaSharpeNull(sampleSize, autocorrelation, moments.skewness(), moments.kurtosis(), sharpeNull);
 
-        var numerator = (sharpe - sharpeThreshold.doubleValue()) * Math.sqrt(t - 1.0);
-        var denominator = Math.sqrt(
-                1.0 - moments.skewness() * sharpe + ((moments.kurtosis() - 1.0) / 4.0) * sharpe * sharpe
-        );
-
-        if (!(denominator > 0.0) || Double.isInfinite(denominator)) {
+        if (!(sigmaSharpeNull > 0.0) || Double.isInfinite(sigmaSharpeNull)) {
             return zero;
         }
-
-        var z = numerator / denominator;
+        var z = (sharpe - sharpeNull) / sigmaSharpeNull;
         var psr = standardNormalCdf(z);
 
         return series.numFactory().numOf(psr);
@@ -118,19 +117,17 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
             return zero;
         }
 
-        var moments = Moments.from(excessReturns); // TODO
-        var t = excessReturns.length;
+        var moments = Moments.from(excessReturns);
+        var sampleSize = excessReturns.length;
+        var sharpeNull = sharpeThreshold.doubleValue();
+        var autocorrelation = lag1Autocorrelation(excessReturns, moments.mean());
+        var sigmaSharpeNull = sigmaSharpeNull(sampleSize, autocorrelation, moments.skewness(), moments.kurtosis(), sharpeNull);
 
-        var numerator = (sharpe - sharpeThreshold.doubleValue()) * Math.sqrt(t - 1.0);
-        var denominator = Math.sqrt(
-                1.0 - moments.skewness() * sharpe + ((moments.kurtosis() - 1.0) / 4.0) * sharpe * sharpe
-        );
-
-        if (!(denominator > 0.0) || Double.isInfinite(denominator)) {
+        if (!(sigmaSharpeNull > 0.0) || Double.isInfinite(sigmaSharpeNull)) {
             return zero;
         }
 
-        var z = numerator / denominator;
+        var z = (sharpe - sharpeNull) / sigmaSharpeNull;
         var psr = standardNormalCdf(z);
 
         return series.numFactory().numOf(psr);
@@ -150,6 +147,61 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
             return 1.0;
         }
         return STANDARD_NORMAL_DISTRIBUTION.cumulativeProbability(z);
+    }
+
+    private static double lag1Autocorrelation(double[] values, double mean) {
+        if (values.length < 2) {
+            return 0.0;
+        }
+
+        var varianceDenominator = Arrays.stream(values)
+                .map(value -> value - mean)
+                .map(centered -> centered * centered)
+                .sum();
+
+        if (!(varianceDenominator > 0.0) || Double.isInfinite(varianceDenominator)) {
+            return 0.0;
+        }
+
+        var covarianceNumerator = IntStream.range(1, values.length)
+                .mapToDouble(index -> (values[index] - mean) * (values[index - 1] - mean))
+                .sum();
+
+        return clamp(covarianceNumerator / varianceDenominator, -0.999999, 0.999999);
+    }
+
+    private static double sigmaSharpeNull(
+            int sampleSize,
+            double autocorrelation,
+            double skewness,
+            double kurtosis,
+            double sharpeNull
+    ) {
+        if (sampleSize <= 1) {
+            return Double.NaN;
+        }
+
+        var rho = clamp(autocorrelation, -0.999999, 0.999999);
+        var rhoSquared = rho * rho;
+
+        var oneMinusRho = 1.0 - rho;
+        var oneMinusRhoSquared = 1.0 - rhoSquared;
+
+        var term1 = (1.0 + rho) / oneMinusRho;
+        var term2 = (1.0 + rho + rhoSquared) / oneMinusRhoSquared;
+        var term3 = (1.0 + rhoSquared) / oneMinusRhoSquared;
+
+        var sigmaSquared = (1.0 / sampleSize) * (
+                term1
+                        - term2 * skewness * sharpeNull
+                        + term3 * ((kurtosis - 1.0) / 4.0) * sharpeNull * sharpeNull
+        );
+
+        return sigmaSquared > 0.0 ? Math.sqrt(sigmaSquared) : Double.NaN;
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.min(max, Math.max(min, value));
     }
 
     @Override

@@ -92,8 +92,12 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
     private final Annualization annualization;
     private final ZoneId groupingZoneId;
 
-    public SharpeRatioCriterion(Num annualRiskFreeRate, Sampling sampling, Annualization annualization,
-                                ZoneId groupingZoneId) {
+    public SharpeRatioCriterion(
+            Num annualRiskFreeRate,
+            Sampling sampling,
+            Annualization annualization,
+            ZoneId groupingZoneId
+    ) {
         this.annualRiskFreeRate = annualRiskFreeRate;
         this.sampling = sampling;
         this.annualization = annualization;
