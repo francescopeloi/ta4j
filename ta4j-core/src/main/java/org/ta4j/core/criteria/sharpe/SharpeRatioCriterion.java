@@ -23,22 +23,15 @@
  */
 package org.ta4j.core.criteria.sharpe;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.YearMonth;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.WeekFields;
-import java.util.Locale;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.analysis.CashFlow;
 import org.ta4j.core.criteria.AbstractAnalysisCriterion;
-import org.ta4j.core.criteria.sharpe.model.Annualization;
-import org.ta4j.core.criteria.sharpe.model.Sampling;
+import org.ta4j.core.criteria.sharpe.helpers.Annualization;
+import org.ta4j.core.criteria.sharpe.helpers.Sampling;
+import org.ta4j.core.criteria.sharpe.helpers.SharpeRatioReturnSeries;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
@@ -94,15 +87,13 @@ import org.ta4j.core.num.NumFactory;
  */
 public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
 
-    private static final double SECONDS_PER_YEAR = 365.2425d * 24 * 3600;
-
     private final Num annualRiskFreeRate;
     private final Sampling sampling;
     private final Annualization annualization;
     private final ZoneId groupingZoneId;
 
     public SharpeRatioCriterion(Num annualRiskFreeRate, Sampling sampling, Annualization annualization,
-            ZoneId groupingZoneId) {
+                                ZoneId groupingZoneId) {
         this.annualRiskFreeRate = annualRiskFreeRate;
         this.sampling = sampling;
         this.annualization = annualization;
@@ -158,11 +149,18 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
             return zero;
         }
 
-        var pairs = Sampling.indexPairs(sampling, groupingZoneId, series, anchorIndex, start, end);
+        var samples = SharpeRatioReturnSeries.samples(
+                series,
+                cashFlow,
+                sampling,
+                groupingZoneId,
+                anchorIndex,
+                start,
+                end,
+                annualRiskFreeRate);
 
-        var acc = pairs.reduce(Acc.empty(zero),
-                (a, p) -> a.add(excessReturn(series, cashFlow, p.previousIndex(), p.currentIndex()),
-                        deltaYears(series, p.previousIndex(), p.currentIndex()), numFactory),
+        var acc = samples.reduce(Acc.empty(zero),
+                (a, s) -> a.add(s.excessReturn(), s.deltaYears(), numFactory),
                 (a, b) -> a.merge(b, numFactory));
 
         if (acc.stats().count() < 2) {
@@ -186,36 +184,6 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
         }
 
         return sharpePerPeriod.multipliedBy(numFactory.numOf(annualizationFactor));
-    }
-
-    private Instant endTimeInstant(BarSeries series, int index) {
-        return series.getBar(index).getEndTime();
-    }
-
-    private double deltaYears(BarSeries series, int previousIndex, int currentIndex) {
-        var endPrev = endTimeInstant(series, previousIndex);
-        var endNow = endTimeInstant(series, currentIndex);
-        var seconds = Math.max(0, Duration.between(endPrev, endNow).getSeconds());
-        return seconds <= 0 ? 0.0 : seconds / SECONDS_PER_YEAR;
-    }
-
-    private Num excessReturn(BarSeries series, CashFlow cashFlow, int previousIndex, int currentIndex) {
-        var numFactory = series.numFactory();
-        var one = numFactory.one();
-        var eReturn = cashFlow.getValue(currentIndex).dividedBy(cashFlow.getValue(previousIndex)).minus(one);
-        return eReturn.minus(periodRiskFree(series, previousIndex, currentIndex));
-    }
-
-    private Num periodRiskFree(BarSeries series, int previousIndex, int currentIndex) {
-        var numFactory = series.numFactory();
-        var deltaYears = deltaYears(series, previousIndex, currentIndex);
-        if (deltaYears <= 0.0) {
-            return numFactory.zero();
-        }
-
-        var annual = (annualRiskFreeRate == null) ? 0.0 : annualRiskFreeRate.doubleValue();
-        var per = Math.pow(1.0 + annual, deltaYears) - 1.0;
-        return numFactory.numOf(per);
     }
 
     @Override

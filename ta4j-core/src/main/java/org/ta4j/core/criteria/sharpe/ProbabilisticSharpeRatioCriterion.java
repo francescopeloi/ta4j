@@ -1,23 +1,18 @@
 package org.ta4j.core.criteria.sharpe;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
-import java.time.temporal.WeekFields;
-import java.util.Locale;
 import org.ta4j.core.AnalysisCriterion;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.analysis.CashFlow;
 import org.ta4j.core.criteria.AbstractAnalysisCriterion;
-import org.ta4j.core.criteria.sharpe.model.Annualization;
-import org.ta4j.core.criteria.sharpe.model.Sampling;
+import org.ta4j.core.criteria.sharpe.helpers.Annualization;
+import org.ta4j.core.criteria.sharpe.helpers.Sampling;
+import org.ta4j.core.criteria.sharpe.helpers.SharpeRatioReturnSeries;
 import org.ta4j.core.num.Num;
 
 public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion {
-
-    private static final double SECONDS_PER_YEAR = 365.2425d * 24 * 3600;
 
     private final Num annualRiskFreeRate;
     private final Sampling sampling;
@@ -56,8 +51,16 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
         var end = series.getEndIndex();
         var anchorIndex = series.getBeginIndex();
 
-        var excessReturns = Sampling.indexPairs(sampling, groupingZoneId, series, anchorIndex, start, end)
-                .mapToDouble(pair -> excessReturn(series, cashFlow, pair.previousIndex(), pair.currentIndex()).doubleValue())
+        var excessReturns = SharpeRatioReturnSeries.samples(
+                        series,
+                        cashFlow,
+                        sampling,
+                        groupingZoneId,
+                        anchorIndex,
+                        start,
+                        end,
+                        annualRiskFreeRate)
+                .mapToDouble(sample -> sample.excessReturn().doubleValue())
                 .toArray();
 
         if (excessReturns.length < 2) {
@@ -95,8 +98,16 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
         var end = Math.min(position.getExit().getIndex(), series.getEndIndex());
         var anchorIndex = position.getEntry().getIndex();
 
-        var excessReturns = Sampling.indexPairs(sampling, groupingZoneId, series, anchorIndex, start, end)
-                .mapToDouble(pair -> excessReturn(series, cashFlow, pair.previousIndex(), pair.currentIndex()).doubleValue())
+        var excessReturns = SharpeRatioReturnSeries.samples(
+                        series,
+                        cashFlow,
+                        sampling,
+                        groupingZoneId,
+                        anchorIndex,
+                        start,
+                        end,
+                        annualRiskFreeRate)
+                .mapToDouble(sample -> sample.excessReturn().doubleValue())
                 .toArray();
 
         if (excessReturns.length < 2) {
@@ -119,36 +130,6 @@ public class ProbabilisticSharpeRatioCriterion extends AbstractAnalysisCriterion
         var psr = standardNormalCdf(z); // TODO
 
         return series.numFactory().numOf(psr);
-    }
-
-    private Num excessReturn(BarSeries series, CashFlow cashFlow, int previousIndex, int currentIndex) {
-        var numFactory = series.numFactory();
-        var one = numFactory.one();
-        var eReturn = cashFlow.getValue(currentIndex).dividedBy(cashFlow.getValue(previousIndex)).minus(one);
-        return eReturn.minus(periodRiskFree(series, previousIndex, currentIndex));
-    }
-
-    private Num periodRiskFree(BarSeries series, int previousIndex, int currentIndex) {
-        var numFactory = series.numFactory();
-        var deltaYears = deltaYears(series, previousIndex, currentIndex);
-        if (deltaYears <= 0.0) {
-            return numFactory.zero();
-        }
-
-        var annual = (annualRiskFreeRate == null) ? 0.0 : annualRiskFreeRate.doubleValue();
-        var per = Math.pow(1.0 + annual, deltaYears) - 1.0;
-        return numFactory.numOf(per);
-    }
-
-    private double deltaYears(BarSeries series, int previousIndex, int currentIndex) {
-        var endPrev = endTimeInstant(series, previousIndex);
-        var endNow = endTimeInstant(series, currentIndex);
-        var seconds = Math.max(0, Duration.between(endPrev, endNow).getSeconds());
-        return seconds <= 0 ? 0.0 : seconds / SECONDS_PER_YEAR;
-    }
-
-    private Instant endTimeInstant(BarSeries series, int index) {
-        return series.getBar(index).getEndTime();
     }
 
     private double standardNormalCdf(double z) {

@@ -1,4 +1,4 @@
-package org.ta4j.core.criteria.sharpe.model;
+package org.ta4j.core.criteria.sharpe.helpers;
 
 import java.time.YearMonth;
 import java.time.ZoneId;

@@ -35,8 +35,8 @@ import org.ta4j.core.BaseBarSeriesBuilder;
 import org.ta4j.core.BaseTradingRecord;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.criteria.AbstractCriterionTest;
-import org.ta4j.core.criteria.sharpe.model.Annualization;
-import org.ta4j.core.criteria.sharpe.model.Sampling;
+import org.ta4j.core.criteria.sharpe.helpers.Annualization;
+import org.ta4j.core.criteria.sharpe.helpers.Sampling;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
