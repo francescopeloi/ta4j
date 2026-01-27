@@ -87,6 +87,23 @@ public class ReturnsTest {
     }
 
     @Test
+    public void returnsRealizedModeUsesExitOnly() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
+                .withData(10d, 12d, 11d, 13d)
+                .build();
+        TradingRecord tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries),
+                Trade.sellAt(3, sampleBarSeries));
+
+        Returns returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL,
+                EquityCurveMode.REALIZED);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(0, returns.getValue(1));
+        assertNumEquals(0, returns.getValue(2));
+        assertNumEquals(0.3, returns.getValue(3));
+    }
+
+    @Test
     public void returnsWithGaps() {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
                 .withData(1d, 2d, 3d, 4d, 5d, 6d, 7d, 8d, 9d, 10d, 11d, 12d)
