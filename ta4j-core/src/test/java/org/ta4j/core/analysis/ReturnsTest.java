@@ -246,4 +246,29 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(0, returns.getValue(2));
     }
 
+    @Test
+    public void returnsMarkToMarketIncludesOpenPositionMultiplicative() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 105d).build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.MULTIPLICATIVE);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(1.1, returns.getValue(1));
+        assertNumEquals(105d / 110d, returns.getValue(2));
+    }
+
+    @Test
+    public void returnsCanIgnoreOpenPositionMultiplicative() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 105d).build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.MULTIPLICATIVE,
+                OpenPositionHandling.IGNORE);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(0, returns.getValue(1));
+        assertNumEquals(0, returns.getValue(2));
+    }
+
 }

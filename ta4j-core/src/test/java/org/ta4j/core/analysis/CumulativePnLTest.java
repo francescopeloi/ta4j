@@ -129,4 +129,20 @@ public class CumulativePnLTest extends AbstractIndicatorTest<org.ta4j.core.Indic
         assertNumEquals(10, pnl.getValue(1));
     }
 
+    @Test
+    public void openShortPositionMarkToMarketAndRealized() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 95, 90).build();
+        var record = new BaseTradingRecord(Trade.sellAt(0, series));
+
+        var markToMarket = new CumulativePnL(series, record);
+        assertNumEquals(0, markToMarket.getValue(0));
+        assertNumEquals(5, markToMarket.getValue(1));
+        assertNumEquals(10, markToMarket.getValue(2));
+
+        var realized = new CumulativePnL(series, record, EquityCurveMode.REALIZED);
+        assertNumEquals(0, realized.getValue(0));
+        assertNumEquals(0, realized.getValue(1));
+        assertNumEquals(0, realized.getValue(2));
+    }
+
 }
