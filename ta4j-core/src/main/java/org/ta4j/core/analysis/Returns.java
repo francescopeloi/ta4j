@@ -28,10 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Indicator;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
+import org.ta4j.core.*;
 import org.ta4j.core.criteria.ReturnRepresentation;
 import org.ta4j.core.criteria.ReturnRepresentationPolicy;
 import org.ta4j.core.num.NaN;
@@ -78,6 +75,34 @@ public class Returns implements Indicator<Num> {
      * arithmetic returns, or returned as-is for log returns.
      */
     private final List<Num> values;
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param finalIndex           the index up to which the returns of open
+     *                             positions are considered
+     * @param representation       the return representation (determines both
+     *                             calculation method and output format)
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public Returns(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
+            ReturnRepresentation representation, EquityCurveMode equityCurveMode,
+            OpenPositionHandling openPositionHandling) {
+        this.barSeries = Objects.requireNonNull(barSeries);
+        this.representation = Objects.requireNonNull(representation);
+        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
+        // at index 0, there is no return
+        var aNan = Collections.singletonList(NaN.NaN);
+        rawValues = new ArrayList<>(aNan);
+        values = new ArrayList<>(aNan);
+        calculate(Objects.requireNonNull(tradingRecord), finalIndex, Objects.requireNonNull(openPositionHandling));
+        fillToTheEnd(barSeries.getEndIndex());
+    }
 
     /**
      * Constructor with default representation from
@@ -130,15 +155,7 @@ public class Returns implements Indicator<Num> {
      */
     public Returns(BarSeries barSeries, Position position, ReturnRepresentation representation,
             EquityCurveMode equityCurveMode) {
-        this.barSeries = Objects.requireNonNull(barSeries);
-        this.representation = Objects.requireNonNull(representation);
-        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        // at index 0, there is no return
-        var aNan = Collections.singletonList(NaN.NaN);
-        rawValues = new ArrayList<>(aNan);
-        values = new ArrayList<>(aNan);
-        calculate(Objects.requireNonNull(position), barSeries.getEndIndex());
-        fillToTheEnd(barSeries.getEndIndex());
+        this(barSeries, new BaseTradingRecord(position), representation, equityCurveMode);
     }
 
     /**
@@ -156,35 +173,6 @@ public class Returns implements Indicator<Num> {
             EquityCurveMode equityCurveMode) {
         this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), representation, equityCurveMode,
                 OpenPositionHandling.MARK_TO_MARKET);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param barSeries            the bar series
-     * @param tradingRecord        the trading record
-     * @param finalIndex           the index up to which the returns of open
-     *                             positions are considered
-     * @param representation       the return representation (determines both
-     *                             calculation method and output format)
-     * @param equityCurveMode      the calculation mode
-     * @param openPositionHandling how to handle the last open position
-     *
-     * @since 0.22.2
-     */
-    public Returns(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
-            ReturnRepresentation representation, EquityCurveMode equityCurveMode,
-            OpenPositionHandling openPositionHandling) {
-        this.barSeries = Objects.requireNonNull(barSeries);
-        this.representation = Objects.requireNonNull(representation);
-        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        Objects.requireNonNull(openPositionHandling);
-        // at index 0, there is no return
-        var aNan = Collections.singletonList(NaN.NaN);
-        rawValues = new ArrayList<>(aNan);
-        values = new ArrayList<>(aNan);
-        calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
-        fillToTheEnd(barSeries.getEndIndex());
     }
 
     /**
@@ -407,8 +395,7 @@ public class Returns implements Indicator<Num> {
      *
      * @param tradingRecord the trading record
      */
-    private void calculateTradingRecord(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
+    private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
         tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
         handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
     }

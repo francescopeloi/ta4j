@@ -28,10 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import java.util.Objects;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Indicator;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
+import org.ta4j.core.*;
 import org.ta4j.core.num.Num;
 
 /**
@@ -50,25 +47,6 @@ public class CashFlow implements Indicator<Num> {
     private final EquityCurveMode equityCurveMode;
 
     /**
-     * Constructor for cash flows of a closed position.
-     *
-     * @param barSeries       the bar series
-     * @param position        a single position
-     * @param equityCurveMode the calculation mode
-     *
-     * @since 0.22.2
-     */
-    public CashFlow(BarSeries barSeries, Position position, EquityCurveMode equityCurveMode) {
-        this.barSeries = Objects.requireNonNull(barSeries);
-        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        var aOne = Collections.singletonList(barSeries.numFactory().one());
-        values = new ArrayList<>(aOne);
-
-        calculateClosedPosition(Objects.requireNonNull(position));
-        fillToTheEnd(barSeries.getEndIndex());
-    }
-
-    /**
      * Constructor.
      *
      * @param barSeries            the bar series
@@ -84,12 +62,24 @@ public class CashFlow implements Indicator<Num> {
             OpenPositionHandling openPositionHandling) {
         this.barSeries = Objects.requireNonNull(barSeries);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        Objects.requireNonNull(openPositionHandling);
         var aOne = Collections.singletonList(barSeries.numFactory().one());
         values = new ArrayList<>(aOne);
 
-        calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
+        calculate(Objects.requireNonNull(tradingRecord), finalIndex, Objects.requireNonNull(openPositionHandling));
         fillToTheEnd(barSeries.getEndIndex());
+    }
+
+    /**
+     * Constructor for cash flows of a closed position.
+     *
+     * @param barSeries       the bar series
+     * @param position        a single position
+     * @param equityCurveMode the calculation mode
+     *
+     * @since 0.22.2
+     */
+    public CashFlow(BarSeries barSeries, Position position, EquityCurveMode equityCurveMode) {
+        this(barSeries, new BaseTradingRecord(position), barSeries.getEndIndex(), equityCurveMode);
     }
 
     /**
@@ -210,19 +200,6 @@ public class CashFlow implements Indicator<Num> {
     }
 
     /**
-     * Calculates the cash flow for a single closed position.
-     *
-     * @param position a single position
-     */
-    private void calculateClosedPosition(Position position) {
-        if (position.isOpened()) {
-            throw new IllegalArgumentException(
-                    "Position is not closed. Final index of observation needs to be provided.");
-        }
-        calculatePosition(position, position.getExit().getIndex());
-    }
-
-    /**
      * Calculates the cash flow for a single position (including accrued cashflow
      * for open positions).
      *
@@ -300,9 +277,8 @@ public class CashFlow implements Indicator<Num> {
      *
      * @param tradingRecord the trading record
      */
-    private void calculateTradingRecord(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
-        tradingRecord.getPositions().forEach(this::calculateClosedPosition);
+    private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
+        tradingRecord.getPositions().forEach(position -> calculatePosition(position, finalIndex));
         handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
     }
 

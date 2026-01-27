@@ -27,10 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Indicator;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
+import org.ta4j.core.*;
 import org.ta4j.core.num.Num;
 
 /**
@@ -54,25 +51,36 @@ public final class CumulativePnL implements Indicator<Num> {
     private final EquityCurveMode equityCurveMode;
 
     /**
+     * Constructor for a trading record with a specified final index.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param finalIndex           the final index to calculate up to
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     * @since 0.22.2
+     */
+    public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
+            EquityCurveMode equityCurveMode, OpenPositionHandling openPositionHandling) {
+        this.barSeries = Objects.requireNonNull(barSeries);
+        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
+        var aZero = Collections.singletonList(barSeries.numFactory().zero());
+        this.values = new ArrayList<>(aZero);
+
+        calculate(Objects.requireNonNull(tradingRecord), finalIndex, Objects.requireNonNull(openPositionHandling));
+        fillToTheEnd(finalIndex);
+    }
+
+    /**
      * Constructor for a single closed position.
      *
      * @param barSeries       the bar series
      * @param position        the closed position
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public CumulativePnL(BarSeries barSeries, Position position, EquityCurveMode equityCurveMode) {
-        Objects.requireNonNull(position);
-        if (position.isOpened()) {
-            throw new IllegalArgumentException("Position is not closed. Provide a final index if open.");
-        }
-        this.barSeries = Objects.requireNonNull(barSeries);
-        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        var aZero = Collections.singletonList(barSeries.numFactory().zero());
-        this.values = new ArrayList<>(aZero);
-        calculate(position, position.getExit().getIndex());
-        fillToTheEnd(barSeries.getEndIndex());
+        this(barSeries, new BaseTradingRecord(position), barSeries.getEndIndex(), equityCurveMode);
     }
 
     /**
@@ -82,7 +90,6 @@ public final class CumulativePnL implements Indicator<Num> {
      * @param tradingRecord   the trading record
      * @param finalIndex      the final index to calculate up to
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
@@ -91,34 +98,10 @@ public final class CumulativePnL implements Indicator<Num> {
     }
 
     /**
-     * Constructor for a trading record with a specified final index.
-     *
-     * @param barSeries            the bar series
-     * @param tradingRecord        the trading record
-     * @param finalIndex           the final index to calculate up to
-     * @param equityCurveMode      the calculation mode
-     * @param openPositionHandling how to handle the last open position
-     *
-     * @since 0.22.2
-     */
-    public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
-            EquityCurveMode equityCurveMode, OpenPositionHandling openPositionHandling) {
-        this.barSeries = Objects.requireNonNull(barSeries);
-        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        Objects.requireNonNull(openPositionHandling);
-        var aZero = Collections.singletonList(barSeries.numFactory().zero());
-        this.values = new ArrayList<>(aZero);
-
-        calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
-        fillToTheEnd(finalIndex);
-    }
-
-    /**
      * Constructor for a single closed position.
      *
      * @param barSeries the bar series
      * @param position  the closed position
-     *
      * @since 0.19
      */
     public CumulativePnL(BarSeries barSeries, Position position) {
@@ -130,7 +113,6 @@ public final class CumulativePnL implements Indicator<Num> {
      *
      * @param barSeries     the bar series
      * @param tradingRecord the trading record
-     *
      * @since 0.19
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord) {
@@ -144,7 +126,6 @@ public final class CumulativePnL implements Indicator<Num> {
      * @param barSeries       the bar series
      * @param tradingRecord   the trading record
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode) {
@@ -159,7 +140,6 @@ public final class CumulativePnL implements Indicator<Num> {
      * @param tradingRecord        the trading record
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode,
@@ -173,7 +153,6 @@ public final class CumulativePnL implements Indicator<Num> {
      * @param barSeries     the bar series
      * @param tradingRecord the trading record
      * @param finalIndex    the final index to calculate up to
-     *
      * @since 0.19
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex) {
@@ -186,7 +165,6 @@ public final class CumulativePnL implements Indicator<Num> {
      * @param barSeries            the bar series
      * @param tradingRecord        the trading record
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, OpenPositionHandling openPositionHandling) {
@@ -228,7 +206,6 @@ public final class CumulativePnL implements Indicator<Num> {
      * Returns the number of bars in the underlying series.
      *
      * @return the bar count
-     *
      * @since 0.19
      */
     public int getSize() {
@@ -280,13 +257,8 @@ public final class CumulativePnL implements Indicator<Num> {
         }
     }
 
-    private void calculateTradingRecord(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
-        var positions = tradingRecord.getPositions();
-        for (var position : positions) {
-            var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
-            calculate(position, endIndex);
-        }
+    private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
+        tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
         handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
     }
 
