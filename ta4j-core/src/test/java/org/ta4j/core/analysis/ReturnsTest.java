@@ -104,9 +104,7 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
 
     @Test
     public void returnsMarkToMarketIncludesOpenPosition() {
-        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
-                .withData(100d, 110d, 105d)
-                .build();
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 105d).build();
         var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
 
         var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL);
@@ -118,9 +116,7 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
 
     @Test
     public void returnsCanIgnoreOpenPosition() {
-        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
-                .withData(100d, 110d, 105d)
-                .build();
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 105d).build();
         var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
 
         var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL,

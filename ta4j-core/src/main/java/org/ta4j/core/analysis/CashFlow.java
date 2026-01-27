@@ -71,21 +71,6 @@ public class CashFlow implements Indicator<Num> {
     /**
      * Constructor.
      *
-     * @param barSeries       the bar series
-     * @param tradingRecord   the trading record
-     * @param finalIndex      index up until cash flows of open positions are
-     *                        considered
-     * @param equityCurveMode the calculation mode
-     *
-     * @since 0.22.2
-     */
-    public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex, EquityCurveMode equityCurveMode) {
-        this(barSeries, tradingRecord, finalIndex, equityCurveMode, OpenPositionHandling.MARK_TO_MARKET);
-    }
-
-    /**
-     * Constructor.
-     *
      * @param barSeries            the bar series
      * @param tradingRecord        the trading record
      * @param finalIndex           index up until cash flows of open positions are
@@ -105,6 +90,21 @@ public class CashFlow implements Indicator<Num> {
 
         calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
         fillToTheEnd(barSeries.getEndIndex());
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries       the bar series
+     * @param tradingRecord   the trading record
+     * @param finalIndex      index up until cash flows of open positions are
+     *                        considered
+     * @param equityCurveMode the calculation mode
+     *
+     * @since 0.22.2
+     */
+    public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex, EquityCurveMode equityCurveMode) {
+        this(barSeries, tradingRecord, finalIndex, equityCurveMode, OpenPositionHandling.MARK_TO_MARKET);
     }
 
     /**

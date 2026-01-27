@@ -163,9 +163,10 @@ public class Returns implements Indicator<Num> {
      *
      * @param barSeries            the bar series
      * @param tradingRecord        the trading record
-     * @param finalIndex           the index up to which the returns of open positions are considered
-     * @param representation       the return representation (determines both calculation
-     *                             method and output format)
+     * @param finalIndex           the index up to which the returns of open
+     *                             positions are considered
+     * @param representation       the return representation (determines both
+     *                             calculation method and output format)
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
      *
@@ -229,8 +230,8 @@ public class Returns implements Indicator<Num> {
      *
      * @param barSeries            the bar series
      * @param tradingRecord        the trading record
-     * @param representation       the return representation (determines both calculation
-     *                             method and output format)
+     * @param representation       the return representation (determines both
+     *                             calculation method and output format)
      * @param openPositionHandling how to handle the last open position
      *
      * @since 0.22.2
@@ -246,8 +247,8 @@ public class Returns implements Indicator<Num> {
      *
      * @param barSeries            the bar series
      * @param tradingRecord        the trading record
-     * @param representation       the return representation (determines both calculation
-     *                             method and output format)
+     * @param representation       the return representation (determines both
+     *                             calculation method and output format)
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
      *
