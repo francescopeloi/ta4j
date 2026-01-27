@@ -87,7 +87,8 @@ public class Returns implements Indicator<Num> {
      * @param position  a single position
      */
     public Returns(BarSeries barSeries, Position position) {
-        this(barSeries, position, ReturnRepresentationPolicy.getDefaultRepresentation(), EquityCurveMode.MARK_TO_MARKET);
+        this(barSeries, position, ReturnRepresentationPolicy.getDefaultRepresentation(),
+                EquityCurveMode.MARK_TO_MARKET);
     }
 
     /**

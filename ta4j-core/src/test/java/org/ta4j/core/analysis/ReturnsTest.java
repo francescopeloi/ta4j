@@ -60,8 +60,7 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
     @Test
     public void singleReturnPositionArith() {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d).build();
-        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries),
-                Trade.sellAt(1, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries));
         var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL);
         assertNumEquals(NaN.NaN, returns.getValue(0));
         assertNumEquals(1.0, returns.getValue(1));
@@ -72,9 +71,9 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
                 .withData(2, 1, 3, 5, 6, 3, 20)
                 .build();
-        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries),
-                Trade.sellAt(1, sampleBarSeries), Trade.buyAt(3, sampleBarSeries), Trade.sellAt(4, sampleBarSeries),
-                Trade.sellAt(5, sampleBarSeries), Trade.buyAt(6, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries),
+                Trade.buyAt(3, sampleBarSeries), Trade.sellAt(4, sampleBarSeries), Trade.sellAt(5, sampleBarSeries),
+                Trade.buyAt(6, sampleBarSeries));
 
         var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL);
 
@@ -92,10 +91,10 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
                 .withData(10d, 12d, 11d, 13d)
                 .build();
-        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries),
-                Trade.sellAt(3, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(3, sampleBarSeries));
 
-        var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL, EquityCurveMode.REALIZED);
+        var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL,
+                EquityCurveMode.REALIZED);
 
         assertNumEquals(NaN.NaN, returns.getValue(0));
         assertNumEquals(0, returns.getValue(1));
@@ -108,8 +107,8 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
                 .withData(1d, 2d, 3d, 4d, 5d, 6d, 7d, 8d, 9d, 10d, 11d, 12d)
                 .build();
-        var tradingRecord = new BaseTradingRecord(Trade.sellAt(2, sampleBarSeries),
-                Trade.buyAt(5, sampleBarSeries), Trade.buyAt(8, sampleBarSeries), Trade.sellAt(10, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.sellAt(2, sampleBarSeries), Trade.buyAt(5, sampleBarSeries),
+                Trade.buyAt(8, sampleBarSeries), Trade.sellAt(10, sampleBarSeries));
 
         var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.LOG);
 
@@ -143,17 +142,13 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
     public void returnsPrecision() {
         assumeTrue(numFactory instanceof DoubleNumFactory);
 
-        var doubleNumSeries = new MockBarSeriesBuilder()
-                .withNumFactory(DoubleNumFactory.getInstance())
+        var doubleNumSeries = new MockBarSeriesBuilder().withNumFactory(DoubleNumFactory.getInstance())
                 .withData(1.2d, 1.1d)
                 .build();
 
         var highPrecisionContext = new MathContext(32, RoundingMode.HALF_UP);
         var precisionFactory = DecimalNumFactory.getInstance(highPrecisionContext);
-        var precisionSeries = new MockBarSeriesBuilder()
-                .withNumFactory(precisionFactory)
-                .withData(1.2d, 1.1d)
-                .build();
+        var precisionSeries = new MockBarSeriesBuilder().withNumFactory(precisionFactory).withData(1.2d, 1.1d).build();
 
         var fullRecordDouble = new BaseTradingRecord();
         fullRecordDouble.enter(doubleNumSeries.getBeginIndex(), doubleNumSeries.getBar(0).getClosePrice(),
@@ -168,7 +163,8 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
                 precisionSeries.numFactory().one());
 
         var arithDouble = new Returns(doubleNumSeries, fullRecordDouble, ReturnRepresentation.DECIMAL).getValue(1);
-        var arithPrecision = new Returns(precisionSeries, fullRecordPrecision, ReturnRepresentation.DECIMAL).getValue(1);
+        var arithPrecision = new Returns(precisionSeries, fullRecordPrecision, ReturnRepresentation.DECIMAL)
+                .getValue(1);
         var logDouble = new Returns(doubleNumSeries, fullRecordDouble, ReturnRepresentation.LOG).getValue(1);
         var logPrecision = new Returns(precisionSeries, fullRecordPrecision, ReturnRepresentation.LOG).getValue(1);
 
@@ -188,8 +184,7 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
                 .withData(10d, 12d, 11d, 13d)
                 .build();
-        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries),
-                Trade.sellAt(3, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(3, sampleBarSeries));
 
         var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.MULTIPLICATIVE,
                 EquityCurveMode.REALIZED);
