@@ -290,13 +290,7 @@ public class Returns implements Indicator<Num> {
                 }
                 rawValues.add(strategyReturn);
                 // Format the return according to the configured representation
-                if (representation == ReturnRepresentation.LOG) {
-                    // Log returns are returned as-is (no conversion needed)
-                    values.add(strategyReturn);
-                } else {
-                    // Raw return is already in DECIMAL format (arithmetic return)
-                    values.add(representation.toRepresentationFromRateOfReturn(strategyReturn));
-                }
+                addValue(strategyReturn);
                 // update base price
                 lastPrice = barSeries.getBar(i).getClosePrice();
             }
@@ -317,19 +311,12 @@ public class Returns implements Indicator<Num> {
                 strategyReturn = rawReturn.multipliedBy(minusOne);
             }
             rawValues.add(strategyReturn);
-            // Format the return according to the configured representation
-            if (representation == ReturnRepresentation.LOG) {
-                // Log returns are returned as-is (no conversion needed)
-                values.add(strategyReturn);
-            } else {
-                // Raw return is already in DECIMAL format (arithmetic return)
-                values.add(representation.toRepresentationFromRateOfReturn(strategyReturn));
-            }
+            addValue(strategyReturn);
         } else {
             Num zero = barSeries.numFactory().zero();
             for (int i = startingIndex; i < endIndex; i++) {
                 rawValues.add(zero);
-                values.add(zero);
+                addValue(zero);
             }
             if (position.getExit() != null && endIndex >= position.getExit().getIndex()) {
                 Num entryPrice = position.getEntry().getNetPrice();
@@ -338,15 +325,22 @@ public class Returns implements Indicator<Num> {
                 Num rawReturn = calculateReturn(netExit, entryPrice);
                 Num strategyReturn = position.getEntry().isBuy() ? rawReturn : rawReturn.multipliedBy(minusOne);
                 rawValues.add(strategyReturn);
-                if (representation == ReturnRepresentation.LOG) {
-                    values.add(strategyReturn);
-                } else {
-                    values.add(representation.toRepresentationFromRateOfReturn(strategyReturn));
-                }
+                addValue(strategyReturn);
             } else {
                 rawValues.add(zero);
-                values.add(zero);
+                addValue(zero);
             }
+        }
+    }
+
+    private void addValue(Num strategyReturn) {
+        // Format the return according to the configured representation
+        if (representation == ReturnRepresentation.LOG) {
+            // Log returns are returned as-is (no conversion needed)
+            values.add(strategyReturn);
+        } else {
+            // Raw return is already in DECIMAL format (arithmetic return)
+            values.add(representation.toRepresentationFromRateOfReturn(strategyReturn));
         }
     }
 
