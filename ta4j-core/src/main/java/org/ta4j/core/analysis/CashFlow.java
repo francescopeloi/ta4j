@@ -64,7 +64,7 @@ public class CashFlow implements Indicator<Num> {
         var aOne = Collections.singletonList(barSeries.numFactory().one());
         values = new ArrayList<>(aOne);
 
-        calculate(Objects.requireNonNull(position));
+        calculateClosedPosition(Objects.requireNonNull(position));
         fillToTheEnd(barSeries.getEndIndex());
     }
 
@@ -80,13 +80,31 @@ public class CashFlow implements Indicator<Num> {
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex, EquityCurveMode equityCurveMode) {
+        this(barSeries, tradingRecord, finalIndex, equityCurveMode, OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param finalIndex           index up until cash flows of open positions are
+     *                             considered
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex, EquityCurveMode equityCurveMode,
+            OpenPositionHandling openPositionHandling) {
         this.barSeries = Objects.requireNonNull(barSeries);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
+        Objects.requireNonNull(openPositionHandling);
         var aOne = Collections.singletonList(barSeries.numFactory().one());
         values = new ArrayList<>(aOne);
 
-        calculate(Objects.requireNonNull(tradingRecord), finalIndex);
-        fillToTheEnd(finalIndex);
+        calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
+        fillToTheEnd(barSeries.getEndIndex());
     }
 
     /**
@@ -106,7 +124,8 @@ public class CashFlow implements Indicator<Num> {
      * @param tradingRecord the trading record
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord) {
-        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), EquityCurveMode.MARK_TO_MARKET);
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.MARK_TO_MARKET);
     }
 
     /**
@@ -119,7 +138,23 @@ public class CashFlow implements Indicator<Num> {
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode) {
-        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), equityCurveMode);
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), equityCurveMode,
+                OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode,
+            OpenPositionHandling openPositionHandling) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), equityCurveMode, openPositionHandling);
     }
 
     /**
@@ -131,7 +166,21 @@ public class CashFlow implements Indicator<Num> {
      *                      considered
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex) {
-        this(barSeries, tradingRecord, finalIndex, EquityCurveMode.MARK_TO_MARKET);
+        this(barSeries, tradingRecord, finalIndex, EquityCurveMode.MARK_TO_MARKET, OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, OpenPositionHandling openPositionHandling) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), EquityCurveMode.MARK_TO_MARKET,
+                openPositionHandling);
     }
 
     /**
@@ -165,12 +214,12 @@ public class CashFlow implements Indicator<Num> {
      *
      * @param position a single position
      */
-    private void calculate(Position position) {
+    private void calculateClosedPosition(Position position) {
         if (position.isOpened()) {
             throw new IllegalArgumentException(
                     "Position is not closed. Final index of observation needs to be provided.");
         }
-        calculate(position, position.getExit().getIndex());
+        calculatePosition(position, position.getExit().getIndex());
     }
 
     /**
@@ -180,7 +229,7 @@ public class CashFlow implements Indicator<Num> {
      * @param position   a single position
      * @param finalIndex index up until cash flow of open positions is considered
      */
-    private void calculate(Position position, int finalIndex) {
+    private void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var isLongTrade = position.getEntry().isBuy();
         var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -251,25 +300,20 @@ public class CashFlow implements Indicator<Num> {
      *
      * @param tradingRecord the trading record
      */
-    private void calculate(TradingRecord tradingRecord) {
-        // For each position...
-        tradingRecord.getPositions().forEach(this::calculate);
+    private void calculateTradingRecord(TradingRecord tradingRecord, int finalIndex,
+            OpenPositionHandling openPositionHandling) {
+        tradingRecord.getPositions().forEach(this::calculateClosedPosition);
+        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
     }
 
-    /**
-     * Calculates the cash flow for all positions of a trading record, including
-     * accrued cash flow of an open position.
-     *
-     * @param tradingRecord the trading record
-     * @param finalIndex    index up until cash flows of open positions are
-     *                      considered
-     */
-    private void calculate(TradingRecord tradingRecord, int finalIndex) {
-        calculate(tradingRecord);
-
-        // Add accrued cash flow of open position
-        if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET && tradingRecord.getCurrentPosition().isOpened()) {
-            calculate(tradingRecord.getCurrentPosition(), finalIndex);
+    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
+            OpenPositionHandling openPositionHandling) {
+        var effectiveOpenPositionHandling = equityCurveMode == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE
+                : openPositionHandling;
+        var currentPosition = tradingRecord.getCurrentPosition();
+        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
+                && currentPosition.isOpened()) {
+            calculatePosition(currentPosition, finalIndex);
         }
     }
 

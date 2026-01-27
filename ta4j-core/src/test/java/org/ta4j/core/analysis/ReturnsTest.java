@@ -103,6 +103,35 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
     }
 
     @Test
+    public void returnsMarkToMarketIncludesOpenPosition() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
+                .withData(100d, 110d, 105d)
+                .build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(0.1, returns.getValue(1));
+        assertNumEquals((105d / 110d) - 1d, returns.getValue(2));
+    }
+
+    @Test
+    public void returnsCanIgnoreOpenPosition() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
+                .withData(100d, 110d, 105d)
+                .build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var returns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL,
+                OpenPositionHandling.IGNORE);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(0, returns.getValue(1));
+        assertNumEquals(0, returns.getValue(2));
+    }
+
+    @Test
     public void returnsWithGaps() {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory)
                 .withData(1d, 2d, 3d, 4d, 5d, 6d, 7d, 8d, 9d, 10d, 11d, 12d)

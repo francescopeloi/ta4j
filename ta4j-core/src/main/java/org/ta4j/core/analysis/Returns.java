@@ -154,15 +154,36 @@ public class Returns implements Indicator<Num> {
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
             EquityCurveMode equityCurveMode) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), representation, equityCurveMode,
+                OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param finalIndex           the index up to which the returns of open positions are considered
+     * @param representation       the return representation (determines both calculation
+     *                             method and output format)
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public Returns(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
+            ReturnRepresentation representation, EquityCurveMode equityCurveMode,
+            OpenPositionHandling openPositionHandling) {
         this.barSeries = Objects.requireNonNull(barSeries);
         this.representation = Objects.requireNonNull(representation);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
+        Objects.requireNonNull(openPositionHandling);
         // at index 0, there is no return
         var aNan = Collections.singletonList(NaN.NaN);
         rawValues = new ArrayList<>(aNan);
         values = new ArrayList<>(aNan);
-        calculate(Objects.requireNonNull(tradingRecord));
-        fillToTheEnd(tradingRecord.getEndIndex(barSeries));
+        calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
+        fillToTheEnd(barSeries.getEndIndex());
     }
 
     /**
@@ -201,6 +222,41 @@ public class Returns implements Indicator<Num> {
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation) {
         this(barSeries, tradingRecord, representation, EquityCurveMode.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param representation       the return representation (determines both calculation
+     *                             method and output format)
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
+            OpenPositionHandling openPositionHandling) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), representation,
+                EquityCurveMode.MARK_TO_MARKET, openPositionHandling);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param representation       the return representation (determines both calculation
+     *                             method and output format)
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
+            EquityCurveMode equityCurveMode, OpenPositionHandling openPositionHandling) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), representation, equityCurveMode,
+                openPositionHandling);
     }
 
     /**
@@ -350,10 +406,21 @@ public class Returns implements Indicator<Num> {
      *
      * @param tradingRecord the trading record
      */
-    private void calculate(TradingRecord tradingRecord) {
-        int endIndex = tradingRecord.getEndIndex(getBarSeries());
-        // For each position...
-        tradingRecord.getPositions().forEach(p -> calculate(p, endIndex));
+    private void calculateTradingRecord(TradingRecord tradingRecord, int finalIndex,
+            OpenPositionHandling openPositionHandling) {
+        tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
+        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
+    }
+
+    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
+            OpenPositionHandling openPositionHandling) {
+        var effectiveOpenPositionHandling = equityCurveMode == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE
+                : openPositionHandling;
+        var currentPosition = tradingRecord.getCurrentPosition();
+        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
+                && currentPosition.isOpened()) {
+            calculate(currentPosition, finalIndex);
+        }
     }
 
     /**

@@ -87,19 +87,29 @@ public final class CumulativePnL implements Indicator<Num> {
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
             EquityCurveMode equityCurveMode) {
+        this(barSeries, tradingRecord, finalIndex, equityCurveMode, OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor for a trading record with a specified final index.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param finalIndex           the final index to calculate up to
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
+            EquityCurveMode equityCurveMode, OpenPositionHandling openPositionHandling) {
         this.barSeries = Objects.requireNonNull(barSeries);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
+        Objects.requireNonNull(openPositionHandling);
         var aZero = Collections.singletonList(barSeries.numFactory().zero());
         this.values = new ArrayList<>(aZero);
 
-        var positions = Objects.requireNonNull(tradingRecord).getPositions();
-        for (var position : positions) {
-            var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
-            calculate(position, endIndex);
-        }
-        if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET && tradingRecord.getCurrentPosition().isOpened()) {
-            calculate(tradingRecord.getCurrentPosition(), finalIndex);
-        }
+        calculateTradingRecord(Objects.requireNonNull(tradingRecord), finalIndex, openPositionHandling);
         fillToTheEnd(finalIndex);
     }
 
@@ -124,7 +134,8 @@ public final class CumulativePnL implements Indicator<Num> {
      * @since 0.19
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord) {
-        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), EquityCurveMode.MARK_TO_MARKET);
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.MARK_TO_MARKET);
     }
 
     /**
@@ -137,7 +148,23 @@ public final class CumulativePnL implements Indicator<Num> {
      * @since 0.22.2
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode) {
-        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), equityCurveMode);
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), equityCurveMode,
+                OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor for a trading record.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param equityCurveMode      the calculation mode
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode,
+            OpenPositionHandling openPositionHandling) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), equityCurveMode, openPositionHandling);
     }
 
     /**
@@ -150,7 +177,21 @@ public final class CumulativePnL implements Indicator<Num> {
      * @since 0.19
      */
     public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex) {
-        this(barSeries, tradingRecord, finalIndex, EquityCurveMode.MARK_TO_MARKET);
+        this(barSeries, tradingRecord, finalIndex, EquityCurveMode.MARK_TO_MARKET, OpenPositionHandling.MARK_TO_MARKET);
+    }
+
+    /**
+     * Constructor for a trading record.
+     *
+     * @param barSeries            the bar series
+     * @param tradingRecord        the trading record
+     * @param openPositionHandling how to handle the last open position
+     *
+     * @since 0.22.2
+     */
+    public CumulativePnL(BarSeries barSeries, TradingRecord tradingRecord, OpenPositionHandling openPositionHandling) {
+        this(barSeries, tradingRecord, tradingRecord.getEndIndex(barSeries), EquityCurveMode.MARK_TO_MARKET,
+                openPositionHandling);
     }
 
     /**
@@ -236,6 +277,27 @@ public final class CumulativePnL implements Indicator<Num> {
             var netExit = AnalysisUtils.addCost(exitRaw, holdingCost, isLong);
             var deltaExit = isLong ? netExit.minus(netEntryPrice) : netEntryPrice.minus(netExit);
             values.add(baseAtEntry.plus(deltaExit));
+        }
+    }
+
+    private void calculateTradingRecord(TradingRecord tradingRecord, int finalIndex,
+            OpenPositionHandling openPositionHandling) {
+        var positions = tradingRecord.getPositions();
+        for (var position : positions) {
+            var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
+            calculate(position, endIndex);
+        }
+        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
+    }
+
+    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
+            OpenPositionHandling openPositionHandling) {
+        var effectiveOpenPositionHandling = equityCurveMode == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE
+                : openPositionHandling;
+        var currentPosition = tradingRecord.getCurrentPosition();
+        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
+                && currentPosition.isOpened()) {
+            calculate(currentPosition, finalIndex);
         }
     }
 
