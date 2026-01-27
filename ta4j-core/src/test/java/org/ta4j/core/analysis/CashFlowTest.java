@@ -366,4 +366,30 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(0.9, cashFlow.getValue(1));
     }
 
+    @Test
+    public void cashFlowRealizedIgnoresOpenPositionEvenWithMarkToMarketHandling() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d, 3d).build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var cashFlow = new CashFlow(sampleBarSeries, tradingRecord, sampleBarSeries.getEndIndex(),
+                EquityCurveMode.REALIZED, OpenPositionHandling.MARK_TO_MARKET);
+
+        assertNumEquals(1, cashFlow.getValue(0));
+        assertNumEquals(1, cashFlow.getValue(1));
+        assertNumEquals(1, cashFlow.getValue(2));
+    }
+
+    @Test
+    public void cashFlowRespectsFinalIndexForOpenPositions() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 120d).build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var cashFlow = new CashFlow(sampleBarSeries, tradingRecord, 1, EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.MARK_TO_MARKET);
+
+        assertNumEquals(1, cashFlow.getValue(0));
+        assertNumEquals(1.1, cashFlow.getValue(1));
+        assertNumEquals(1.1, cashFlow.getValue(2));
+    }
+
 }

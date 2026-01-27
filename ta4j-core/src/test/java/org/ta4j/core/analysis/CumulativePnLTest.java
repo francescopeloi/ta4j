@@ -107,4 +107,42 @@ public class CumulativePnLTest extends AbstractIndicatorTest<org.ta4j.core.Indic
         assertNumEquals(0, pnl.getValue(2));
     }
 
+    @Test
+    public void realizedModeIgnoresOpenPositionEvenWithMarkToMarketHandling() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 105, 102).build();
+        var record = new BaseTradingRecord(Trade.buyAt(0, series));
+
+        var pnl = new CumulativePnL(series, record, EquityCurveMode.REALIZED, OpenPositionHandling.MARK_TO_MARKET);
+        assertNumEquals(0, pnl.getValue(0));
+        assertNumEquals(0, pnl.getValue(1));
+        assertNumEquals(0, pnl.getValue(2));
+    }
+
+    @Test
+    public void markToMarketRespectsFinalIndexForOpenPositions() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 110, 120).build();
+        var record = new BaseTradingRecord(Trade.buyAt(0, series));
+
+        var pnl = new CumulativePnL(series, record, 1, EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.MARK_TO_MARKET);
+        assertNumEquals(0, pnl.getValue(0));
+        assertNumEquals(10, pnl.getValue(1));
+    }
+
+    @Test
+    public void openShortPositionMarkToMarketAndRealized() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 95, 90).build();
+        var record = new BaseTradingRecord(Trade.sellAt(0, series));
+
+        var markToMarket = new CumulativePnL(series, record);
+        assertNumEquals(0, markToMarket.getValue(0));
+        assertNumEquals(5, markToMarket.getValue(1));
+        assertNumEquals(10, markToMarket.getValue(2));
+
+        var realized = new CumulativePnL(series, record, EquityCurveMode.REALIZED);
+        assertNumEquals(0, realized.getValue(0));
+        assertNumEquals(0, realized.getValue(1));
+        assertNumEquals(0, realized.getValue(2));
+    }
+
 }
