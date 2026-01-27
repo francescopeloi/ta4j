@@ -50,7 +50,7 @@ import org.ta4j.core.num.Num;
  * @see ReturnRepresentation
  * @see ReturnRepresentationPolicy
  */
-public class Returns implements Indicator<Num> {
+public class Returns implements Indicator<Num>, PositionPerformanceIndicator {
 
     private final ReturnRepresentation representation;
     private final EquityCurveMode equityCurveMode;
@@ -300,7 +300,7 @@ public class Returns implements Indicator<Num> {
      * @param finalIndex the index up to which the cash flow of open positions is
      *                   considered
      */
-    public void calculate(Position position, int finalIndex) {
+    private void calculatePositionInternal(Position position, int finalIndex) {
         boolean isLongTrade = position.getEntry().isBuy();
         Num minusOne = barSeries.numFactory().numOf(-1);
         int endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -390,25 +390,9 @@ public class Returns implements Indicator<Num> {
         }
     }
 
-    /**
-     * Calculates the returns for a trading record.
-     *
-     * @param tradingRecord the trading record
-     */
-    private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
-        tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
-        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
-    }
-
-    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
-        var effectiveOpenPositionHandling = equityCurveMode == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE
-                : openPositionHandling;
-        var currentPosition = tradingRecord.getCurrentPosition();
-        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
-                && currentPosition.isOpened()) {
-            calculate(currentPosition, finalIndex);
-        }
+    @Override
+    public EquityCurveMode getEquityCurveMode() {
+        return equityCurveMode;
     }
 
     /**
@@ -444,5 +428,19 @@ public class Returns implements Indicator<Num> {
             rawValues.addAll(c);
             values.addAll(c);
         }
+    }
+
+    /**
+     * Calculates the returns for a single position.
+     *
+     * @param position   a single position
+     * @param finalIndex the index up to which the returns of open positions are
+     *                   considered
+     *
+     * @since 0.22.2
+     */
+    @Override
+    public void calculatePosition(Position position, int finalIndex) {
+        calculatePositionInternal(position, finalIndex);
     }
 }

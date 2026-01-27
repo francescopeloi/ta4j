@@ -44,7 +44,7 @@ import org.ta4j.core.num.Num;
  *
  * @since 0.19
  */
-public final class CumulativePnL implements Indicator<Num> {
+public final class CumulativePnL implements Indicator<Num>, PositionPerformanceIndicator {
 
     private final BarSeries barSeries;
     private final List<Num> values;
@@ -212,7 +212,7 @@ public final class CumulativePnL implements Indicator<Num> {
         return barSeries.getBarCount();
     }
 
-    private void calculate(Position position, int finalIndex) {
+    private void calculatePositionInternal(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var zero = numFactory.zero();
         var isLong = position.getEntry().isBuy();
@@ -257,20 +257,9 @@ public final class CumulativePnL implements Indicator<Num> {
         }
     }
 
-    private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
-        tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
-        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
-    }
-
-    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
-        var effectiveOpenPositionHandling = equityCurveMode == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE
-                : openPositionHandling;
-        var currentPosition = tradingRecord.getCurrentPosition();
-        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
-                && currentPosition.isOpened()) {
-            calculate(currentPosition, finalIndex);
-        }
+    @Override
+    public EquityCurveMode getEquityCurveMode() {
+        return equityCurveMode;
     }
 
     private void fillToTheEnd(int endIndex) {
@@ -278,6 +267,19 @@ public final class CumulativePnL implements Indicator<Num> {
             var last = values.getLast();
             values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, last));
         }
+    }
+
+    /**
+     * Calculates the cumulative PnL for a single position.
+     *
+     * @param position   the position
+     * @param finalIndex the final index to calculate up to
+     *
+     * @since 0.22.2
+     */
+    @Override
+    public void calculatePosition(Position position, int finalIndex) {
+        calculatePositionInternal(position, finalIndex);
     }
 
 }
