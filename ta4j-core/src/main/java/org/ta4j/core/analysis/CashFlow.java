@@ -35,7 +35,7 @@ import org.ta4j.core.num.Num;
  * Allows to follow the money cash flow involved by a list of positions over a
  * bar series, either marked to market or using realized values only.
  */
-public class CashFlow implements Indicator<Num> {
+public class CashFlow implements Indicator<Num>, PositionPerformanceIndicator {
 
     /** The bar series. */
     private final BarSeries barSeries;
@@ -206,7 +206,7 @@ public class CashFlow implements Indicator<Num> {
      * @param position   a single position
      * @param finalIndex index up until cash flow of open positions is considered
      */
-    private void calculate(Position position, int finalIndex) {
+    private void calculatePositionInternal(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var isLongTrade = position.getEntry().isBuy();
         var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -272,25 +272,9 @@ public class CashFlow implements Indicator<Num> {
         return ratio;
     }
 
-    /**
-     * Calculates the cash flow for the closed positions of a trading record.
-     *
-     * @param tradingRecord the trading record
-     */
-    private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
-        tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
-        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
-    }
-
-    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
-        var effectiveOpenPositionHandling = equityCurveMode == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE
-                : openPositionHandling;
-        var currentPosition = tradingRecord.getCurrentPosition();
-        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
-                && currentPosition.isOpened()) {
-            calculate(currentPosition, finalIndex);
-        }
+    @Override
+    public EquityCurveMode getEquityCurveMode() {
+        return equityCurveMode;
     }
 
     /**
@@ -303,6 +287,20 @@ public class CashFlow implements Indicator<Num> {
             var lastValue = values.getLast();
             values.addAll(Collections.nCopies(endIndex - values.size() + 1, lastValue));
         }
+    }
+
+    /**
+     * Calculates the cash flow for a single position (including accrued cashflow
+     * for open positions).
+     *
+     * @param position   a single position
+     * @param finalIndex index up until cash flow of open positions is considered
+     *
+     * @since 0.22.2
+     */
+    @Override
+    public void calculatePosition(Position position, int finalIndex) {
+        calculatePositionInternal(position, finalIndex);
     }
 
 }
