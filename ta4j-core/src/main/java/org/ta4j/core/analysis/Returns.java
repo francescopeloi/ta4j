@@ -50,7 +50,7 @@ import org.ta4j.core.num.Num;
  * @see ReturnRepresentation
  * @see ReturnRepresentationPolicy
  */
-public class Returns implements Indicator<Num>, PositionPerformanceIndicator {
+public class Returns implements Indicator<Num>, PerformanceIndicator {
 
     private final ReturnRepresentation representation;
     private final EquityCurveMode equityCurveMode;
@@ -249,58 +249,16 @@ public class Returns implements Indicator<Num>, PositionPerformanceIndicator {
     }
 
     /**
-     * @return the return rates (formatted according to the configured
-     *         representation)
-     */
-    public List<Num> getValues() {
-        // Values are already formatted during calculate()
-        return values;
-    }
-
-    /**
-     * @param index the bar index
-     * @return the return rate value at the index-th position (formatted according
-     *         to the configured representation)
-     */
-    @Override
-    public Num getValue(int index) {
-        // Values are already formatted during calculate()
-        return values.get(index);
-    }
-
-    /**
-     * @return the raw return rates (before formatting)
-     */
-    public List<Num> getRawValues() {
-        return rawValues;
-    }
-
-    @Override
-    public int getCountOfUnstableBars() {
-        return 0;
-    }
-
-    @Override
-    public BarSeries getBarSeries() {
-        return barSeries;
-    }
-
-    /**
-     * @return the size of the return series.
-     */
-    public int getSize() {
-        return barSeries.getBarCount() - 1;
-    }
-
-    /**
-     * Calculates the cash flow for a single position (including accrued cashflow
-     * for open positions).
+     * Calculates the returns for a single position.
      *
      * @param position   a single position
-     * @param finalIndex the index up to which the cash flow of open positions is
+     * @param finalIndex the index up to which the returns of open positions are
      *                   considered
+     *
+     * @since 0.22.2
      */
-    private void calculatePositionInternal(Position position, int finalIndex) {
+    @Override
+    public void calculatePosition(Position position, int finalIndex) {
         boolean isLongTrade = position.getEntry().isBuy();
         Num minusOne = barSeries.numFactory().numOf(-1);
         int endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -379,6 +337,50 @@ public class Returns implements Indicator<Num>, PositionPerformanceIndicator {
         }
     }
 
+    /**
+     * @return the return rates (formatted according to the configured
+     *         representation)
+     */
+    public List<Num> getValues() {
+        // Values are already formatted during calculate()
+        return values;
+    }
+
+    /**
+     * @param index the bar index
+     * @return the return rate value at the index-th position (formatted according
+     *         to the configured representation)
+     */
+    @Override
+    public Num getValue(int index) {
+        // Values are already formatted during calculate()
+        return values.get(index);
+    }
+
+    /**
+     * @return the raw return rates (before formatting)
+     */
+    public List<Num> getRawValues() {
+        return rawValues;
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
+    }
+
+    @Override
+    public BarSeries getBarSeries() {
+        return barSeries;
+    }
+
+    /**
+     * @return the size of the return series.
+     */
+    public int getSize() {
+        return barSeries.getBarCount() - 1;
+    }
+
     private void addValue(Num strategyReturn) {
         // Format the return according to the configured representation
         if (representation == ReturnRepresentation.LOG) {
@@ -430,17 +432,4 @@ public class Returns implements Indicator<Num>, PositionPerformanceIndicator {
         }
     }
 
-    /**
-     * Calculates the returns for a single position.
-     *
-     * @param position   a single position
-     * @param finalIndex the index up to which the returns of open positions are
-     *                   considered
-     *
-     * @since 0.22.2
-     */
-    @Override
-    public void calculatePosition(Position position, int finalIndex) {
-        calculatePositionInternal(position, finalIndex);
-    }
 }

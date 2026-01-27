@@ -44,7 +44,7 @@ import org.ta4j.core.num.Num;
  *
  * @since 0.19
  */
-public final class CumulativePnL implements Indicator<Num>, PositionPerformanceIndicator {
+public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator {
 
     private final BarSeries barSeries;
     private final List<Num> values;
@@ -173,46 +173,15 @@ public final class CumulativePnL implements Indicator<Num>, PositionPerformanceI
     }
 
     /**
-     * {@inheritDoc}
+     * Calculates the cumulative PnL for a single position.
      *
-     * @since 0.19
+     * @param position   the position
+     * @param finalIndex the final index to calculate up to
+     *
+     * @since 0.22.2
      */
     @Override
-    public Num getValue(int index) {
-        return values.get(index);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 0.19
-     */
-    @Override
-    public int getCountOfUnstableBars() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 0.19
-     */
-    @Override
-    public BarSeries getBarSeries() {
-        return barSeries;
-    }
-
-    /**
-     * Returns the number of bars in the underlying series.
-     *
-     * @return the bar count
-     * @since 0.19
-     */
-    public int getSize() {
-        return barSeries.getBarCount();
-    }
-
-    private void calculatePositionInternal(Position position, int finalIndex) {
+    public void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var zero = numFactory.zero();
         var isLong = position.getEntry().isBuy();
@@ -257,6 +226,46 @@ public final class CumulativePnL implements Indicator<Num>, PositionPerformanceI
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @since 0.19
+     */
+    @Override
+    public Num getValue(int index) {
+        return values.get(index);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 0.19
+     */
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @since 0.19
+     */
+    @Override
+    public BarSeries getBarSeries() {
+        return barSeries;
+    }
+
+    /**
+     * Returns the number of bars in the underlying series.
+     *
+     * @return the bar count
+     * @since 0.19
+     */
+    public int getSize() {
+        return barSeries.getBarCount();
+    }
+
     @Override
     public EquityCurveMode getEquityCurveMode() {
         return equityCurveMode;
@@ -267,19 +276,6 @@ public final class CumulativePnL implements Indicator<Num>, PositionPerformanceI
             var last = values.getLast();
             values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, last));
         }
-    }
-
-    /**
-     * Calculates the cumulative PnL for a single position.
-     *
-     * @param position   the position
-     * @param finalIndex the final index to calculate up to
-     *
-     * @since 0.22.2
-     */
-    @Override
-    public void calculatePosition(Position position, int finalIndex) {
-        calculatePositionInternal(position, finalIndex);
     }
 
 }

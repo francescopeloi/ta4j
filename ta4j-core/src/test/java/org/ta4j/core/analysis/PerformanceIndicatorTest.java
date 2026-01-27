@@ -33,9 +33,9 @@ import org.ta4j.core.mocks.MockBarSeriesBuilder;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.num.NumFactory;
 
-public class PositionPerformanceIndicatorTest extends AbstractIndicatorTest<PositionPerformanceIndicator, Num> {
+public class PerformanceIndicatorTest extends AbstractIndicatorTest<PerformanceIndicator, Num> {
 
-    public PositionPerformanceIndicatorTest(NumFactory numFactory) {
+    public PerformanceIndicatorTest(NumFactory numFactory) {
         super(numFactory);
     }
 
@@ -54,7 +54,7 @@ public class PositionPerformanceIndicatorTest extends AbstractIndicatorTest<Posi
         assertUnchanged(returnsIndicator, tradingRecord, series.getEndIndex(), numFactory.zero());
     }
 
-    private void assertUnchanged(PositionPerformanceIndicator indicator, TradingRecord tradingRecord, int finalIndex,
+    private void assertUnchanged(PerformanceIndicator indicator, TradingRecord tradingRecord, int finalIndex,
             Num expectedValue) {
         indicator.calculate(tradingRecord, finalIndex, OpenPositionHandling.MARK_TO_MARKET);
         assertNumEquals(expectedValue, indicator.getValue(finalIndex));

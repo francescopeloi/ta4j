@@ -35,7 +35,7 @@ import org.ta4j.core.num.Num;
  * Allows to follow the money cash flow involved by a list of positions over a
  * bar series, either marked to market or using realized values only.
  */
-public class CashFlow implements Indicator<Num>, PositionPerformanceIndicator {
+public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
     /** The bar series. */
     private final BarSeries barSeries;
@@ -174,39 +174,16 @@ public class CashFlow implements Indicator<Num>, PositionPerformanceIndicator {
     }
 
     /**
-     * @param index the bar index
-     * @return the cash flow value at the index-th position
-     */
-    @Override
-    public Num getValue(int index) {
-        return values.get(index);
-    }
-
-    @Override
-    public int getCountOfUnstableBars() {
-        return 0;
-    }
-
-    @Override
-    public BarSeries getBarSeries() {
-        return barSeries;
-    }
-
-    /**
-     * @return the size of the bar series
-     */
-    public int getSize() {
-        return barSeries.getBarCount();
-    }
-
-    /**
      * Calculates the cash flow for a single position (including accrued cashflow
      * for open positions).
      *
      * @param position   a single position
      * @param finalIndex index up until cash flow of open positions is considered
+     *
+     * @since 0.22.2
      */
-    private void calculatePositionInternal(Position position, int finalIndex) {
+    @Override
+    public void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var isLongTrade = position.getEntry().isBuy();
         var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -255,6 +232,32 @@ public class CashFlow implements Indicator<Num>, PositionPerformanceIndicator {
     }
 
     /**
+     * @param index the bar index
+     * @return the cash flow value at the index-th position
+     */
+    @Override
+    public Num getValue(int index) {
+        return values.get(index);
+    }
+
+    @Override
+    public int getCountOfUnstableBars() {
+        return 0;
+    }
+
+    @Override
+    public BarSeries getBarSeries() {
+        return barSeries;
+    }
+
+    /**
+     * @return the size of the bar series
+     */
+    public int getSize() {
+        return barSeries.getBarCount();
+    }
+
+    /**
      * Calculates the ratio of intermediate prices.
      *
      * @param isLongTrade true, if the entry trade type is BUY
@@ -287,20 +290,6 @@ public class CashFlow implements Indicator<Num>, PositionPerformanceIndicator {
             var lastValue = values.getLast();
             values.addAll(Collections.nCopies(endIndex - values.size() + 1, lastValue));
         }
-    }
-
-    /**
-     * Calculates the cash flow for a single position (including accrued cashflow
-     * for open positions).
-     *
-     * @param position   a single position
-     * @param finalIndex index up until cash flow of open positions is considered
-     *
-     * @since 0.22.2
-     */
-    @Override
-    public void calculatePosition(Position position, int finalIndex) {
-        calculatePositionInternal(position, finalIndex);
     }
 
 }

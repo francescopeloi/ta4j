@@ -35,7 +35,7 @@ import org.ta4j.core.num.Num;
  *
  * @since 0.22.2
  */
-public interface PositionPerformanceIndicator extends Indicator<Num> {
+public interface PerformanceIndicator extends Indicator<Num> {
 
     /**
      * Calculates indicator values based on the provided trading record.
@@ -75,13 +75,16 @@ public interface PositionPerformanceIndicator extends Indicator<Num> {
 
     private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
             OpenPositionHandling openPositionHandling) {
-        var effectiveOpenPositionHandling = getEquityCurveMode() == EquityCurveMode.REALIZED
-                ? OpenPositionHandling.IGNORE
-                : openPositionHandling;
+        var effectiveOpenPositionHandling = getEffectiveOpenPositionHandling(openPositionHandling);
         var currentPosition = tradingRecord.getCurrentPosition();
         if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
                 && currentPosition.isOpened()) {
             calculatePosition(currentPosition, finalIndex);
         }
     }
+
+    private OpenPositionHandling getEffectiveOpenPositionHandling(OpenPositionHandling openPositionHandling) {
+        return getEquityCurveMode() == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE : openPositionHandling;
+    }
+
 }
