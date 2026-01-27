@@ -24,6 +24,7 @@
 package org.ta4j.core.analysis;
 
 import static org.junit.Assert.assertEquals;
+import org.ta4j.core.Position;
 import static org.ta4j.core.TestUtils.assertNumEquals;
 
 import org.junit.Test;
@@ -143,6 +144,28 @@ public class CumulativePnLTest extends AbstractIndicatorTest<org.ta4j.core.Indic
         assertNumEquals(0, realized.getValue(0));
         assertNumEquals(0, realized.getValue(1));
         assertNumEquals(0, realized.getValue(2));
+    }
+
+    @Test
+    public void positionConstructorUsesMarkToMarket() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 110, 105).build();
+        var position = new Position(Trade.buyAt(0, series), Trade.sellAt(2, series));
+
+        var pnl = new CumulativePnL(series, position);
+        assertNumEquals(0, pnl.getValue(0));
+        assertNumEquals(10, pnl.getValue(1));
+        assertNumEquals(5, pnl.getValue(2));
+    }
+
+    @Test
+    public void positionConstructorUsesRealizedMode() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100, 110, 105).build();
+        var position = new Position(Trade.buyAt(0, series), Trade.sellAt(2, series));
+
+        var pnl = new CumulativePnL(series, position, EquityCurveMode.REALIZED);
+        assertNumEquals(0, pnl.getValue(0));
+        assertNumEquals(0, pnl.getValue(1));
+        assertNumEquals(5, pnl.getValue(2));
     }
 
 }

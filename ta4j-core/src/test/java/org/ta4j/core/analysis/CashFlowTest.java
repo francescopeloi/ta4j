@@ -24,6 +24,7 @@
 package org.ta4j.core.analysis;
 
 import static org.junit.Assert.assertEquals;
+import org.ta4j.core.Position;
 import static org.ta4j.core.TestUtils.assertNumEquals;
 
 import java.util.Collections;
@@ -390,6 +391,30 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(1, cashFlow.getValue(0));
         assertNumEquals(1.1, cashFlow.getValue(1));
         assertNumEquals(1.1, cashFlow.getValue(2));
+    }
+
+    @Test
+    public void cashFlowFromPositionUsesMarkToMarketCurve() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d, 3d).build();
+        var position = new Position(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(2, sampleBarSeries));
+
+        var cashFlow = new CashFlow(sampleBarSeries, position);
+
+        assertNumEquals(1, cashFlow.getValue(0));
+        assertNumEquals(2, cashFlow.getValue(1));
+        assertNumEquals(3, cashFlow.getValue(2));
+    }
+
+    @Test
+    public void cashFlowFromPositionUsesRealizedCurve() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d, 3d).build();
+        var position = new Position(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(2, sampleBarSeries));
+
+        var cashFlow = new CashFlow(sampleBarSeries, position, EquityCurveMode.REALIZED);
+
+        assertNumEquals(1, cashFlow.getValue(0));
+        assertNumEquals(1, cashFlow.getValue(1));
+        assertNumEquals(3, cashFlow.getValue(2));
     }
 
 }

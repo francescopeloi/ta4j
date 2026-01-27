@@ -271,4 +271,31 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(0, returns.getValue(2));
     }
 
+    @Test
+    public void returnsFromPositionDefaultRepresentationMatchesTradingRecord() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d).build();
+        var position = new Position(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries));
+
+        var positionReturns = new Returns(sampleBarSeries, position);
+        var tradingRecordReturns = new Returns(sampleBarSeries, tradingRecord);
+
+        assertNumEquals(tradingRecordReturns.getValue(0), positionReturns.getValue(0));
+        assertNumEquals(tradingRecordReturns.getValue(1), positionReturns.getValue(1));
+    }
+
+    @Test
+    public void returnsFromPositionDecimalMatchesTradingRecord() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d).build();
+        var position = new Position(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries));
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries));
+
+        var positionReturns = new Returns(sampleBarSeries, position, ReturnRepresentation.DECIMAL);
+        var tradingRecordReturns = new Returns(sampleBarSeries, tradingRecord, ReturnRepresentation.DECIMAL);
+
+        assertNumEquals(NaN.NaN, positionReturns.getValue(0));
+        assertNumEquals(1.0, positionReturns.getValue(1));
+        assertNumEquals(tradingRecordReturns.getValue(1), positionReturns.getValue(1));
+    }
+
 }

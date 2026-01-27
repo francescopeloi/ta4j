@@ -83,6 +83,20 @@ public interface PerformanceIndicator extends Indicator<Num> {
         }
     }
 
+    /**
+     * Derives the open-position handling from the equity curve mode to keep
+     * realized-only curves from leaking unrealized P&amp;L into the calculation.
+     *
+     * <p>
+     * When the equity curve is realized-only, we force
+     * {@link OpenPositionHandling#IGNORE} regardless of the caller preference. For
+     * all other modes we defer to the requested handling so callers can opt into
+     * mark-to-market behavior.
+     * </p>
+     *
+     * @param openPositionHandling the requested handling for open positions
+     * @return the effective handling aligned with the equity curve mode
+     */
     private OpenPositionHandling getEffectiveOpenPositionHandling(OpenPositionHandling openPositionHandling) {
         return getEquityCurveMode() == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE : openPositionHandling;
     }
