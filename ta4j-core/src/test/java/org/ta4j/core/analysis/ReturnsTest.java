@@ -220,4 +220,30 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(1.3, returns.getValue(3));
     }
 
+    @Test
+    public void realizedModeIgnoresOpenPositionEvenWithMarkToMarketHandling() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 105d).build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var returns = new Returns(sampleBarSeries, tradingRecord, sampleBarSeries.getEndIndex(),
+                ReturnRepresentation.DECIMAL, EquityCurveMode.REALIZED, OpenPositionHandling.MARK_TO_MARKET);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(0, returns.getValue(1));
+        assertNumEquals(0, returns.getValue(2));
+    }
+
+    @Test
+    public void returnsRespectFinalIndexForOpenPositions() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 110d, 120d).build();
+        var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries));
+
+        var returns = new Returns(sampleBarSeries, tradingRecord, 1, ReturnRepresentation.DECIMAL,
+                EquityCurveMode.MARK_TO_MARKET, OpenPositionHandling.MARK_TO_MARKET);
+
+        assertNumEquals(NaN.NaN, returns.getValue(0));
+        assertNumEquals(0.1, returns.getValue(1));
+        assertNumEquals(0, returns.getValue(2));
+    }
+
 }

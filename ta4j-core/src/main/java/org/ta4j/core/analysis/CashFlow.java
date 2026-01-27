@@ -206,7 +206,7 @@ public class CashFlow implements Indicator<Num> {
      * @param position   a single position
      * @param finalIndex index up until cash flow of open positions is considered
      */
-    private void calculatePosition(Position position, int finalIndex) {
+    private void calculate(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var isLongTrade = position.getEntry().isBuy();
         var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -233,8 +233,8 @@ public class CashFlow implements Indicator<Num> {
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
             var avgCost = holdingCost.dividedBy(numFactory.numOf(effectivePeriods));
             for (var i = startingIndex; i < endIndex; i++) {
-                var intermediateNetPrice = AnalysisUtils.addCost(barSeries.getBar(i).getClosePrice(), avgCost,
-                        isLongTrade);
+                var closePrice = barSeries.getBar(i).getClosePrice();
+                var intermediateNetPrice = AnalysisUtils.addCost(closePrice, avgCost, isLongTrade);
                 var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, intermediateNetPrice);
                 values.add(values.get(entryIndex).multipliedBy(ratio));
             }
@@ -278,7 +278,7 @@ public class CashFlow implements Indicator<Num> {
      * @param tradingRecord the trading record
      */
     private void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
-        tradingRecord.getPositions().forEach(position -> calculatePosition(position, finalIndex));
+        tradingRecord.getPositions().forEach(position -> calculate(position, finalIndex));
         handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
     }
 
@@ -289,7 +289,7 @@ public class CashFlow implements Indicator<Num> {
         var currentPosition = tradingRecord.getCurrentPosition();
         if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
                 && currentPosition.isOpened()) {
-            calculatePosition(currentPosition, finalIndex);
+            calculate(currentPosition, finalIndex);
         }
     }
 
