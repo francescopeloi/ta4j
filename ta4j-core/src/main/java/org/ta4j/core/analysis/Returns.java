@@ -130,15 +130,39 @@ public class Returns implements Indicator<Num> {
      */
     public Returns(BarSeries barSeries, Position position, ReturnRepresentation representation,
             EquityCurveMode equityCurveMode) {
-        this.barSeries = barSeries;
-        this.representation = representation;
+        this.barSeries = Objects.requireNonNull(barSeries);
+        this.representation = Objects.requireNonNull(representation);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
         // at index 0, there is no return
-        rawValues = new ArrayList<>(Collections.singletonList(NaN.NaN));
-        values = new ArrayList<>(Collections.singletonList(NaN.NaN));
+        var aNan = Collections.singletonList(NaN.NaN);
+        rawValues = new ArrayList<>(aNan);
+        values = new ArrayList<>(aNan);
         calculate(position, barSeries.getEndIndex());
-
         fillToTheEnd(barSeries.getEndIndex());
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param barSeries       the bar series
+     * @param tradingRecord   the trading record
+     * @param representation  the return representation (determines both calculation
+     *                        method and output format)
+     * @param equityCurveMode the calculation mode
+     *
+     * @since 0.22.2
+     */
+    public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
+            EquityCurveMode equityCurveMode) {
+        this.barSeries = Objects.requireNonNull(barSeries);
+        this.representation = Objects.requireNonNull(representation);
+        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
+        // at index 0, there is no return
+        var aNan = Collections.singletonList(NaN.NaN);
+        rawValues = new ArrayList<>(aNan);
+        values = new ArrayList<>(aNan);
+        calculate(tradingRecord);
+        fillToTheEnd(tradingRecord.getEndIndex(barSeries));
     }
 
     /**
@@ -177,30 +201,6 @@ public class Returns implements Indicator<Num> {
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation) {
         this(barSeries, tradingRecord, representation, EquityCurveMode.MARK_TO_MARKET);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param barSeries       the bar series
-     * @param tradingRecord   the trading record
-     * @param representation  the return representation (determines both calculation
-     *                        method and output format)
-     * @param equityCurveMode the calculation mode
-     *
-     * @since 0.22.2
-     */
-    public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
-            EquityCurveMode equityCurveMode) {
-        this.barSeries = barSeries;
-        this.representation = representation;
-        this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        // at index 0, there is no return
-        rawValues = new ArrayList<>(Collections.singletonList(NaN.NaN));
-        values = new ArrayList<>(Collections.singletonList(NaN.NaN));
-        calculate(tradingRecord);
-
-        fillToTheEnd(tradingRecord.getEndIndex(barSeries));
     }
 
     /**
