@@ -23,6 +23,7 @@
  */
 package org.ta4j.core.analysis;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.ta4j.core.TestUtils.assertNumEquals;
 
@@ -112,6 +113,47 @@ public class PerformanceIndicatorTest extends AbstractIndicatorTest<PerformanceI
 
         var result = testIndicator().addCost(raw, cost, false);
         assertNumEquals("101.5", result);
+    }
+
+    @Test
+    public void markToMarketSkipsFutureOpenPositions() {
+        var series = new MockBarSeriesBuilder().withNumFactory(numFactory)
+                .withData(1d, 2d, 3d, 4d, 5d, 6d, 7d, 8d, 9d, 10d, 11d)
+                .build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(10, numFactory.one(), numFactory.one());
+
+        var calls = new AtomicInteger();
+        var indicator = new PerformanceIndicator() {
+            @Override
+            public Num getValue(int index) {
+                return numFactory.zero();
+            }
+
+            @Override
+            public int getCountOfUnstableBars() {
+                return 0;
+            }
+
+            @Override
+            public BarSeries getBarSeries() {
+                return series;
+            }
+
+            @Override
+            public EquityCurveMode getEquityCurveMode() {
+                return EquityCurveMode.MARK_TO_MARKET;
+            }
+
+            @Override
+            public void calculatePosition(Position position, int finalIndex) {
+                calls.incrementAndGet();
+            }
+        };
+
+        indicator.calculate(tradingRecord, 5, OpenPositionHandling.MARK_TO_MARKET);
+
+        assertEquals(0, calls.get());
     }
 
     private void assertUnchanged(PerformanceIndicator indicator, TradingRecord tradingRecord, int finalIndex,

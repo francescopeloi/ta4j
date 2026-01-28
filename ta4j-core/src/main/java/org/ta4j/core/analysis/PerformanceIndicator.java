@@ -92,12 +92,11 @@ public interface PerformanceIndicator extends Indicator<Num> {
         return !isOpenAtFinalIndex;
     }
 
-    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling effectiveOpenPositionHandling) {
-        var currentPosition = tradingRecord.getCurrentPosition();
-        if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
-                && currentPosition.isOpened()) {
-            calculatePosition(currentPosition, finalIndex);
+    private void handleLastPosition(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling oph) {
+        var cp = tradingRecord.getCurrentPosition();
+        if (oph == OpenPositionHandling.MARK_TO_MARKET && cp != null && cp.isOpened()
+                && shouldCalculatePosition(cp, finalIndex, oph)) {
+            calculatePosition(cp, finalIndex);
         }
     }
 
