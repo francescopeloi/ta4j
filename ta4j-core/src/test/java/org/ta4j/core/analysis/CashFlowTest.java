@@ -460,7 +460,7 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(1, cashFlow.getValue(1));
         assertNumEquals(3, cashFlow.getValue(2));
     }
-  
+
     public void cashFlowIgnoresOpenPositionWhenConfigured() {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 120d, 180d).build();
         var tradingRecord = new BaseTradingRecord(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(1, sampleBarSeries),

@@ -26,19 +26,9 @@ package org.ta4j.core.analysis;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import java.util.Objects;
 import org.ta4j.core.*;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Indicator;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
 import org.ta4j.core.num.Num;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Allows to follow the money cash flow involved by a list of positions over a
@@ -60,7 +50,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      *                             considered
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex, EquityCurveMode equityCurveMode,
@@ -80,7 +69,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      * @param barSeries       the bar series
      * @param position        a single position
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, Position position, EquityCurveMode equityCurveMode) {
@@ -95,7 +83,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      * @param finalIndex      index up until cash flows of open positions are
      *                        considered
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex, EquityCurveMode equityCurveMode) {
@@ -129,7 +116,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      * @param barSeries       the bar series
      * @param tradingRecord   the trading record
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode) {
@@ -144,7 +130,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      * @param tradingRecord        the trading record
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode,
@@ -170,7 +155,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      * @param barSeries            the bar series
      * @param tradingRecord        the trading record
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public CashFlow(BarSeries barSeries, TradingRecord tradingRecord, OpenPositionHandling openPositionHandling) {
@@ -184,7 +168,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      *
      * @param position   a single position
      * @param finalIndex index up until cash flow of open positions is considered
-     *
      * @since 0.22.2
      */
     @Override
@@ -210,7 +193,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
         var netEntryPrice = position.getEntry().getNetPrice();
 
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
-            var avgCost = holdingCost.dividedBy(numFactory.numOf(effectivePeriods));
+            var avgCost = holdingCost.dividedBy(numFactory.numOf(effectivePeriodCount));
             for (var i = startingIndex; i < endIndex; i++) {
                 var closePrice = barSeries.getBar(i).getClosePrice();
                 var intermediateNetPrice = AnalysisUtils.addCost(closePrice, avgCost, isLongTrade);
@@ -261,24 +244,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
         return barSeries.getBarCount();
     }
 
-    /**
-     * Calculates the ratio of intermediate prices.
-     *
-     * @param isLongTrade true, if the entry trade type is BUY
-     * @param entryPrice  price ratio denominator
-     * @param exitPrice   price ratio numerator
-     */
-    private static Num getIntermediateRatio(boolean isLongTrade, Num entryPrice, Num exitPrice) {
-        Num ratio;
-        if (isLongTrade) {
-            ratio = exitPrice.dividedBy(entryPrice);
-        } else {
-            ratio = entryPrice.getNumFactory().numOf(2).minus(exitPrice.dividedBy(entryPrice));
-        }
-
-        return ratio;
-    }
-
     @Override
     public EquityCurveMode getEquityCurveMode() {
         return equityCurveMode;
@@ -291,6 +256,13 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
         }
     }
 
+    /**
+     * Calculates the ratio of intermediate prices.
+     *
+     * @param isLongTrade true, if the entry trade type is BUY
+     * @param entryPrice  price ratio denominator
+     * @param exitPrice   price ratio numerator
+     */
     private static Num getIntermediateRatio(boolean isLongTrade, Num entryPrice, Num exitPrice) {
         if (isLongTrade) {
             return exitPrice.dividedBy(entryPrice);

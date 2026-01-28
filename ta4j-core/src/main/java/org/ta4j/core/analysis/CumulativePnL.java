@@ -177,7 +177,6 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
      *
      * @param position   the position
      * @param finalIndex the final index to calculate up to
-     *
      * @since 0.22.2
      */
     @Override

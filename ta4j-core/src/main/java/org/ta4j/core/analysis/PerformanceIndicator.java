@@ -24,7 +24,6 @@
 package org.ta4j.core.analysis;
 
 import java.util.Objects;
-
 import org.ta4j.core.Indicator;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
