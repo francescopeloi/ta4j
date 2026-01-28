@@ -254,7 +254,7 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
     public void calculatePosition(Position position, int finalIndex) {
         boolean isLongTrade = position.getEntry().isBuy();
         Num minusOne = barSeries.numFactory().numOf(-1);
-        int endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
+        int endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
         final int entryIndex = position.getEntry().getIndex();
         int begin = entryIndex + 1;
         if (begin > rawValues.size()) {
@@ -277,8 +277,7 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
             // accordingly
             Num lastPrice = position.getEntry().getNetPrice();
             for (int i = startingIndex; i < endIndex; i++) {
-                Num intermediateNetPrice = AnalysisUtils.addCost(barSeries.getBar(i).getClosePrice(), avgCost,
-                        isLongTrade);
+                Num intermediateNetPrice = addCost(barSeries.getBar(i).getClosePrice(), avgCost, isLongTrade);
                 Num rawReturn = calculateReturn(intermediateNetPrice, lastPrice);
 
                 Num strategyReturn;
@@ -298,7 +297,7 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
             var exitPrice = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
                     : barSeries.getBar(endIndex).getClosePrice();
 
-            Num rawReturn = calculateReturn(AnalysisUtils.addCost(exitPrice, avgCost, isLongTrade), lastPrice);
+            Num rawReturn = calculateReturn(addCost(exitPrice, avgCost, isLongTrade), lastPrice);
             Num strategyReturn;
             if (position.getEntry().isBuy()) {
                 strategyReturn = rawReturn;
@@ -316,7 +315,7 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
             if (position.getExit() != null && endIndex >= position.getExit().getIndex()) {
                 Num entryPrice = position.getEntry().getNetPrice();
                 Num exitPrice = position.getExit().getNetPrice();
-                Num netExit = AnalysisUtils.addCost(exitPrice, holdingCost, isLongTrade);
+                Num netExit = addCost(exitPrice, holdingCost, isLongTrade);
                 Num rawReturn = calculateReturn(netExit, entryPrice);
                 Num strategyReturn = position.getEntry().isBuy() ? rawReturn : rawReturn.multipliedBy(minusOne);
                 rawValues.add(strategyReturn);

@@ -183,7 +183,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
     public void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
         var isLongTrade = position.getEntry().isBuy();
-        var endIndex = AnalysisUtils.determineEndIndex(position, finalIndex, barSeries.getEndIndex());
+        var endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
         var entryIndex = position.getEntry().getIndex();
         var beginIndexExclusive = entryIndex + 1;
 
@@ -204,7 +204,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
             for (var barIndex = startingIndex; barIndex < endIndex; barIndex++) {
                 var closePrice = barSeries.getBar(barIndex).getClosePrice();
-                var intermediateNetPrice = AnalysisUtils.addCost(closePrice, averageHoldingCostPerPeriod, isLongTrade);
+                var intermediateNetPrice = addCost(closePrice, averageHoldingCostPerPeriod, isLongTrade);
                 var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, intermediateNetPrice);
                 values.add(entryEquity.multipliedBy(ratio));
             }
@@ -212,7 +212,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
             var exitTrade = position.getExit();
             var exitPrice = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
                     : barSeries.getBar(endIndex).getClosePrice();
-            var netExitPrice = AnalysisUtils.addCost(exitPrice, averageHoldingCostPerPeriod, isLongTrade);
+            var netExitPrice = addCost(exitPrice, averageHoldingCostPerPeriod, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
             values.add(entryEquity.multipliedBy(ratio));
         } else if (position.getExit() != null && endIndex >= position.getExit().getIndex()) {
@@ -220,7 +220,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
                 values.add(entryEquity);
             }
 
-            var netExitPrice = AnalysisUtils.addCost(position.getExit().getNetPrice(), holdingCost, isLongTrade);
+            var netExitPrice = addCost(position.getExit().getNetPrice(), holdingCost, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
             values.add(entryEquity.multipliedBy(ratio));
         }
