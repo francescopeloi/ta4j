@@ -271,7 +271,7 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
             return;
         }
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
-            Num avgCost = holdingCost.dividedBy(getBarSeries().numFactory().numOf(nPeriods));
+            Num avgCost = averageHoldingCostPerPeriod(position, endIndex, getBarSeries().numFactory());
 
             // returns are per period (iterative). Base price needs to be updated
             // accordingly
@@ -293,9 +293,7 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
                 lastPrice = barSeries.getBar(i).getClosePrice();
             }
 
-            var exitTrade = position.getExit();
-            var exitPrice = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
-                    : barSeries.getBar(endIndex).getClosePrice();
+            var exitPrice = resolveExitPrice(position, endIndex, barSeries);
 
             Num rawReturn = calculateReturn(addCost(exitPrice, avgCost, isLongTrade), lastPrice);
             Num strategyReturn;

@@ -34,6 +34,7 @@
 - **Equity curve mode control**: Added constructors to select mark-to-market or realized cash-flow calculation for CumulativePnL, Returns, and all drawdown criteria.
 - **Open position handling**: Added configurable handling for the last open position in CashFlow, CumulativePnL, and Returns.
 - **Performance indicator helpers**: Consolidated analysis helper logic into `PerformanceIndicator` and updated callers/tests accordingly.
+- **PerformanceIndicator defaults**: Added shared helpers for average holding cost per period and exit price resolution in core performance calculations.
 
 ### Fixed
 - **TimeBarBuilder**: Preserve in-progress bars when trade ingestion skips across multiple time periods.
