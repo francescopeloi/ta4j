@@ -65,7 +65,8 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
             OpenPositionHandling openPositionHandling) {
         this.barSeries = Objects.requireNonNull(barSeries);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        values = new ArrayList<>(List.of(barSeries.numFactory().one()));
+        var aOne = List.of(barSeries.numFactory().one());
+        values = new ArrayList<>(aOne);
 
         calculate(Objects.requireNonNull(tradingRecord), finalIndex, Objects.requireNonNull(openPositionHandling));
         fillToTheEnd(barSeries.getEndIndex());
@@ -181,9 +182,10 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
     @Override
     public void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
-        var isLongTrade = position.getEntry().isBuy();
+        var entry = position.getEntry();
+        var isLongTrade = entry.isBuy();
         var endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
-        var entryIndex = position.getEntry().getIndex();
+        var entryIndex = entry.getIndex();
         var beginIndexExclusive = entryIndex + 1;
 
         ensureValuesSizeAtLeast(beginIndexExclusive);
@@ -195,30 +197,29 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
         var startingIndex = Math.max(beginIndexExclusive, 1);
         var holdingCost = position.getHoldingCost(endIndex);
-        var netEntryPrice = position.getEntry().getNetPrice();
-
+        var netEntryPrice = entry.getNetPrice();
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
             var averageHoldingCostPerPeriod = averageHoldingCostPerPeriod(position, endIndex, numFactory);
-
             for (var barIndex = startingIndex; barIndex < endIndex; barIndex++) {
                 var closePrice = barSeries.getBar(barIndex).getClosePrice();
                 var intermediateNetPrice = addCost(closePrice, averageHoldingCostPerPeriod, isLongTrade);
                 var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, intermediateNetPrice);
                 values.add(entryEquity.multipliedBy(ratio));
             }
-
             var exitPrice = resolveExitPrice(position, endIndex, barSeries);
             var netExitPrice = addCost(exitPrice, averageHoldingCostPerPeriod, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
             values.add(entryEquity.multipliedBy(ratio));
-        } else if (position.getExit() != null && endIndex >= position.getExit().getIndex()) {
-            for (var barIndex = startingIndex; barIndex < endIndex; barIndex++) {
-                values.add(entryEquity);
+        } else {
+            var exit = position.getExit();
+            if (exit != null && endIndex >= exit.getIndex()) {
+                for (var barIndex = startingIndex; barIndex < endIndex; barIndex++) {
+                    values.add(entryEquity);
+                }
+                var netExitPrice = addCost(exit.getNetPrice(), holdingCost, isLongTrade);
+                var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
+                values.add(entryEquity.multipliedBy(ratio));
             }
-
-            var netExitPrice = addCost(position.getExit().getNetPrice(), holdingCost, isLongTrade);
-            var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
-            values.add(entryEquity.multipliedBy(ratio));
         }
     }
 

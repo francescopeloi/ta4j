@@ -252,10 +252,11 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      */
     @Override
     public void calculatePosition(Position position, int finalIndex) {
-        boolean isLongTrade = position.getEntry().isBuy();
-        Num minusOne = barSeries.numFactory().numOf(-1);
+        var entry = position.getEntry();
+        boolean isLongTrade = entry.isBuy();
+        Num minusOne = barSeries.numFactory().minusOne();
         int endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
-        final int entryIndex = position.getEntry().getIndex();
+        final int entryIndex = entry.getIndex();
         int begin = entryIndex + 1;
         if (begin > rawValues.size()) {
             Num zero = barSeries.numFactory().zero();
@@ -274,13 +275,13 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
 
             // returns are per period (iterative). Base price needs to be updated
             // accordingly
-            Num lastPrice = position.getEntry().getNetPrice();
+            Num lastPrice = entry.getNetPrice();
             for (int i = startingIndex; i < endIndex; i++) {
-                Num intermediateNetPrice = addCost(barSeries.getBar(i).getClosePrice(), avgCost, isLongTrade);
+                var bar = barSeries.getBar(i);
+                Num intermediateNetPrice = addCost(bar.getClosePrice(), avgCost, isLongTrade);
                 Num rawReturn = calculateReturn(intermediateNetPrice, lastPrice);
-
                 Num strategyReturn;
-                if (position.getEntry().isBuy()) {
+                if (entry.isBuy()) {
                     strategyReturn = rawReturn;
                 } else {
                     strategyReturn = rawReturn.multipliedBy(minusOne);
@@ -289,14 +290,13 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
                 // Format the return according to the configured representation
                 addValue(strategyReturn);
                 // update base price
-                lastPrice = barSeries.getBar(i).getClosePrice();
+                lastPrice = bar.getClosePrice();
             }
 
             var exitPrice = resolveExitPrice(position, endIndex, barSeries);
-
             Num rawReturn = calculateReturn(addCost(exitPrice, avgCost, isLongTrade), lastPrice);
             Num strategyReturn;
-            if (position.getEntry().isBuy()) {
+            if (entry.isBuy()) {
                 strategyReturn = rawReturn;
             } else {
                 strategyReturn = rawReturn.multipliedBy(minusOne);
@@ -309,12 +309,13 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
                 rawValues.add(zero);
                 addValue(zero);
             }
-            if (position.getExit() != null && endIndex >= position.getExit().getIndex()) {
-                Num entryPrice = position.getEntry().getNetPrice();
-                Num exitPrice = position.getExit().getNetPrice();
+            var exit = position.getExit();
+            if (exit != null && endIndex >= exit.getIndex()) {
+                Num entryPrice = entry.getNetPrice();
+                Num exitPrice = exit.getNetPrice();
                 Num netExit = addCost(exitPrice, holdingCost, isLongTrade);
                 Num rawReturn = calculateReturn(netExit, entryPrice);
-                Num strategyReturn = position.getEntry().isBuy() ? rawReturn : rawReturn.multipliedBy(minusOne);
+                Num strategyReturn = entry.isBuy() ? rawReturn : rawReturn.multipliedBy(minusOne);
                 rawValues.add(strategyReturn);
                 addValue(strategyReturn);
             } else {

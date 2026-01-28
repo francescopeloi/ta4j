@@ -182,8 +182,9 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
     @Override
     public void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
-        var isLong = position.getEntry().isBuy();
-        var entryIndex = position.getEntry().getIndex();
+        var entry = position.getEntry();
+        var isLong = entry.isBuy();
+        var entryIndex = entry.getIndex();
         var endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
         var begin = entryIndex + 1;
 
@@ -191,11 +192,9 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
 
         var baseAtEntry = values.get(entryIndex);
         var startingIndex = Math.max(begin, 1);
-
         var holdingCost = position.getHoldingCost(endIndex);
         var averageCostPerPeriod = averageHoldingCostPerPeriod(position, endIndex, numFactory);
-        var netEntryPrice = position.getEntry().getNetPrice();
-
+        var netEntryPrice = entry.getNetPrice();
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
             for (var i = startingIndex; i < endIndex; i++) {
                 var close = barSeries.getBar(i).getClosePrice();
@@ -203,19 +202,21 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
                 var delta = isLong ? netIntermediate.minus(netEntryPrice) : netEntryPrice.minus(netIntermediate);
                 values.add(baseAtEntry.plus(delta));
             }
-
             var exitRaw = resolveExitPrice(position, endIndex, barSeries);
             var netExit = addCost(exitRaw, averageCostPerPeriod, isLong);
             var deltaExit = isLong ? netExit.minus(netEntryPrice) : netEntryPrice.minus(netExit);
             values.add(baseAtEntry.plus(deltaExit));
-        } else if (position.getExit() != null && endIndex >= position.getExit().getIndex()) {
-            for (var i = startingIndex; i < endIndex; i++) {
-                values.add(baseAtEntry);
+        } else {
+            var exit = position.getExit();
+            if (exit != null && endIndex >= exit.getIndex()) {
+                for (var i = startingIndex; i < endIndex; i++) {
+                    values.add(baseAtEntry);
+                }
+                var exitRaw = exit.getNetPrice();
+                var netExit = addCost(exitRaw, holdingCost, isLong);
+                var deltaExit = isLong ? netExit.minus(netEntryPrice) : netEntryPrice.minus(netExit);
+                values.add(baseAtEntry.plus(deltaExit));
             }
-            var exitRaw = position.getExit().getNetPrice();
-            var netExit = addCost(exitRaw, holdingCost, isLong);
-            var deltaExit = isLong ? netExit.minus(netEntryPrice) : netEntryPrice.minus(netExit);
-            values.add(baseAtEntry.plus(deltaExit));
         }
     }
 
