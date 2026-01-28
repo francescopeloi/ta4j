@@ -23,20 +23,21 @@
  */
 package org.ta4j.core.analysis;
 
+import java.math.MathContext;
+import java.math.RoundingMode;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
 import org.junit.Test;
-import org.ta4j.core.*;
+import org.ta4j.core.BaseTradingRecord;
+import org.ta4j.core.Indicator;
+import org.ta4j.core.Position;
+import static org.ta4j.core.TestUtils.assertNumEquals;
+import org.ta4j.core.Trade;
 import org.ta4j.core.criteria.ReturnRepresentation;
 import org.ta4j.core.indicators.AbstractIndicatorTest;
 import org.ta4j.core.mocks.MockBarSeriesBuilder;
 import org.ta4j.core.num.*;
-
-import java.math.MathContext;
-import java.math.RoundingMode;
-
-import static org.junit.Assert.assertEquals;
-import static org.ta4j.core.TestUtils.assertNumEquals;
 
 public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
 
@@ -313,6 +314,37 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         var lastReturn = returns.getValue(endIndex);
         assertFalse(lastReturn.isNaN());
         assertNumEquals(0, lastReturn);
+    }
+
+    @Test
+    public void returns_markToMarket_doesNotUseFutureExitPriceWhenExitAfterFinalIndex() {
+        var series = new MockBarSeriesBuilder().withData(10d, 11d, 12d, 13d, 100d).build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(0, series.getBar(0).getClosePrice(), series.numFactory().one());
+        tradingRecord.exit(4, series.getBar(4).getClosePrice(), series.numFactory().one());
+
+        var returns = new Returns(series, tradingRecord, 2, ReturnRepresentation.DECIMAL,
+                EquityCurveMode.MARK_TO_MARKET, OpenPositionHandling.MARK_TO_MARKET);
+
+        var one = series.numFactory().one();
+        var expectedAt2 = series.getBar(2).getClosePrice().dividedBy(series.getBar(1).getClosePrice()).minus(one);
+
+        assertNumEquals(returns.getRawValues().get(2), expectedAt2);
+    }
+
+    @Test
+    public void returns_ignore_skipsPositionsThatAreOpenAtFinalIndex() {
+        var series = new MockBarSeriesBuilder().withData(10d, 11d, 12d, 13d, 100d).build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(0, series.getBar(0).getClosePrice(), series.numFactory().one());
+        tradingRecord.exit(4, series.getBar(4).getClosePrice(), series.numFactory().one());
+
+        var returns = new Returns(series, tradingRecord, 2, ReturnRepresentation.DECIMAL,
+                EquityCurveMode.MARK_TO_MARKET, OpenPositionHandling.IGNORE);
+
+        var zero = series.numFactory().zero();
+        assertNumEquals(returns.getRawValues().get(1), zero);
+        assertNumEquals(returns.getRawValues().get(2), zero);
     }
 
 }

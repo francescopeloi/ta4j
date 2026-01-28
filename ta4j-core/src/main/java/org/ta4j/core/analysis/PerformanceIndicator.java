@@ -43,21 +43,24 @@ public interface PerformanceIndicator extends Indicator<Num> {
      * @param finalIndex           index up until values of open positions are
      *                             considered
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     default void calculate(TradingRecord tradingRecord, int finalIndex, OpenPositionHandling openPositionHandling) {
         Objects.requireNonNull(tradingRecord);
         Objects.requireNonNull(openPositionHandling);
-        tradingRecord.getPositions().forEach(position -> calculatePosition(position, finalIndex));
-        handleLastPosition(tradingRecord, finalIndex, openPositionHandling);
+        var effectiveOpenPositionHandling = getEffectiveOpenPositionHandling(openPositionHandling);
+        tradingRecord.getPositions().forEach(position -> {
+            if (shouldCalculatePosition(position, finalIndex, effectiveOpenPositionHandling)) {
+                calculatePosition(position, finalIndex);
+            }
+        });
+        handleLastPosition(tradingRecord, finalIndex, effectiveOpenPositionHandling);
     }
 
     /**
      * Returns the equity curve mode that influences open position handling.
      *
      * @return the equity curve mode
-     *
      * @since 0.22.2
      */
     EquityCurveMode getEquityCurveMode();
@@ -67,14 +70,27 @@ public interface PerformanceIndicator extends Indicator<Num> {
      *
      * @param position   the position
      * @param finalIndex index up until values of open positions are considered
-     *
      * @since 0.22.2
      */
     void calculatePosition(Position position, int finalIndex);
 
+    private boolean shouldCalculatePosition(Position position, int finalIndex,
+            OpenPositionHandling effectiveOpenPositionHandling) {
+        Objects.requireNonNull(position);
+        var entry = position.getEntry();
+        if (entry == null || entry.getIndex() > finalIndex) {
+            return false;
+        }
+        if (effectiveOpenPositionHandling != OpenPositionHandling.IGNORE) {
+            return true;
+        }
+        var exit = position.getExit();
+        var isOpenAtFinalIndex = exit == null || exit.getIndex() > finalIndex;
+        return !isOpenAtFinalIndex;
+    }
+
     private void handleLastPosition(TradingRecord tradingRecord, int finalIndex,
-            OpenPositionHandling openPositionHandling) {
-        var effectiveOpenPositionHandling = getEffectiveOpenPositionHandling(openPositionHandling);
+            OpenPositionHandling effectiveOpenPositionHandling) {
         var currentPosition = tradingRecord.getCurrentPosition();
         if (effectiveOpenPositionHandling == OpenPositionHandling.MARK_TO_MARKET && currentPosition != null
                 && currentPosition.isOpened()) {
@@ -98,6 +114,43 @@ public interface PerformanceIndicator extends Indicator<Num> {
      */
     private OpenPositionHandling getEffectiveOpenPositionHandling(OpenPositionHandling openPositionHandling) {
         return getEquityCurveMode() == EquityCurveMode.REALIZED ? OpenPositionHandling.IGNORE : openPositionHandling;
+    }
+
+    /**
+     * Determines the valid final index to be considered.
+     *
+     * @param position   the position
+     * @param finalIndex index up until cash flows of open positions are considered
+     * @param maxIndex   maximal valid index
+     */
+    default int determineEndIndex(Position position, int finalIndex, int maxIndex) {
+        var idx = finalIndex;
+        // After closing of position, no further accrual necessary
+        if (position.getExit() != null) {
+            idx = Math.min(position.getExit().getIndex(), finalIndex);
+        }
+        // Accrual at most until maximal index of asset data
+        if (idx > maxIndex) {
+            idx = maxIndex;
+        }
+        return idx;
+    }
+
+    /**
+     * Adjusts (intermediate) price to incorporate trading costs.
+     *
+     * @param rawPrice    the gross asset price
+     * @param holdingCost share of the holding cost per period
+     * @param isLongTrade true, if the entry trade type is BUY
+     */
+    default Num addCost(Num rawPrice, Num holdingCost, boolean isLongTrade) {
+        Num netPrice;
+        if (isLongTrade) {
+            netPrice = rawPrice.minus(holdingCost);
+        } else {
+            netPrice = rawPrice.plus(holdingCost);
+        }
+        return netPrice;
     }
 
 }

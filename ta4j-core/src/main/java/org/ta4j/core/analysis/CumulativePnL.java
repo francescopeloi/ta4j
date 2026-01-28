@@ -209,7 +209,8 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
                 values.add(baseAtEntry.plus(delta));
             }
 
-            var exitRaw = Objects.nonNull(position.getExit()) ? position.getExit().getNetPrice()
+            var exitTrade = position.getExit();
+            var exitRaw = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
                     : barSeries.getBar(endIndex).getClosePrice();
             var netExit = AnalysisUtils.addCost(exitRaw, averageCostPerPeriod, isLong);
             var deltaExit = isLong ? netExit.minus(netEntryPrice) : netEntryPrice.minus(netExit);

@@ -24,11 +24,10 @@
 package org.ta4j.core.analysis;
 
 import static org.junit.Assert.assertEquals;
-import org.ta4j.core.Position;
-import static org.ta4j.core.TestUtils.assertNumEquals;
-
 import org.junit.Test;
 import org.ta4j.core.BaseTradingRecord;
+import org.ta4j.core.Position;
+import static org.ta4j.core.TestUtils.assertNumEquals;
 import org.ta4j.core.Trade;
 import org.ta4j.core.indicators.AbstractIndicatorTest;
 import org.ta4j.core.mocks.MockBarSeriesBuilder;
@@ -166,6 +165,33 @@ public class CumulativePnLTest extends AbstractIndicatorTest<org.ta4j.core.Indic
         assertNumEquals(0, pnl.getValue(0));
         assertNumEquals(0, pnl.getValue(1));
         assertNumEquals(5, pnl.getValue(2));
+    }
+
+    @Test
+    public void cumulativePnL_markToMarket_doesNotUseFutureExitPriceWhenExitAfterFinalIndex() {
+        var series = new MockBarSeriesBuilder().withData(10d, 11d, 12d, 13d, 100d).build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(0, series.getBar(0).getClosePrice(), series.numFactory().one());
+        tradingRecord.exit(4, series.getBar(4).getClosePrice(), series.numFactory().one());
+
+        var cumulativePnL = new CumulativePnL(series, tradingRecord, 2, EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.MARK_TO_MARKET);
+
+        var expected = series.getBar(2).getClosePrice().minus(series.getBar(0).getClosePrice());
+        assertNumEquals(cumulativePnL.getValue(2), expected);
+    }
+
+    @Test
+    public void cumulativePnL_ignore_skipsPositionsThatAreOpenAtFinalIndex() {
+        var series = new MockBarSeriesBuilder().withData(10d, 11d, 12d, 13d, 100d).build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(0, series.getBar(0).getClosePrice(), series.numFactory().one());
+        tradingRecord.exit(4, series.getBar(4).getClosePrice(), series.numFactory().one());
+
+        var cumulativePnL = new CumulativePnL(series, tradingRecord, 2, EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.IGNORE);
+
+        assertNumEquals(cumulativePnL.getValue(2), series.numFactory().zero());
     }
 
 }

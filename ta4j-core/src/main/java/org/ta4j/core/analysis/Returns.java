@@ -294,13 +294,9 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
                 lastPrice = barSeries.getBar(i).getClosePrice();
             }
 
-            // add net return at exit position
-            Num exitPrice;
-            if (position.getExit() != null) {
-                exitPrice = position.getExit().getNetPrice();
-            } else {
-                exitPrice = barSeries.getBar(endIndex).getClosePrice();
-            }
+            var exitTrade = position.getExit();
+            var exitPrice = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
+                    : barSeries.getBar(endIndex).getClosePrice();
 
             Num rawReturn = calculateReturn(AnalysisUtils.addCost(exitPrice, avgCost, isLongTrade), lastPrice);
             Num strategyReturn;

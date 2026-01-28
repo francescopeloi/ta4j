@@ -209,7 +209,8 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
                 values.add(entryEquity.multipliedBy(ratio));
             }
 
-            var exitPrice = position.getExit() != null ? position.getExit().getNetPrice()
+            var exitTrade = position.getExit();
+            var exitPrice = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
                     : barSeries.getBar(endIndex).getClosePrice();
             var netExitPrice = AnalysisUtils.addCost(exitPrice, averageHoldingCostPerPeriod, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);

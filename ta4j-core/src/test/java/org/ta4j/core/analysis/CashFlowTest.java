@@ -23,15 +23,13 @@
  */
 package org.ta4j.core.analysis;
 
-import static org.junit.Assert.assertEquals;
-import org.ta4j.core.Position;
-import static org.ta4j.core.TestUtils.assertNumEquals;
-
 import java.util.Collections;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.ta4j.core.BaseTradingRecord;
 import org.ta4j.core.Indicator;
+import org.ta4j.core.Position;
 import static org.ta4j.core.TestUtils.assertNumEquals;
 import org.ta4j.core.Trade;
 import org.ta4j.core.analysis.cost.CostModel;
@@ -473,13 +471,35 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(1.2, ignore.getValue(2));
     }
 
-    private static final class FixedHoldingCostModel implements CostModel {
+    @Test
+    public void cashFlow_markToMarket_doesNotUseFutureExitPriceWhenExitAfterFinalIndex() {
+        var series = new MockBarSeriesBuilder().withData(10d, 11d, 12d, 13d, 100d).build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(0, series.getBar(0).getClosePrice(), series.numFactory().one());
+        tradingRecord.exit(4, series.getBar(4).getClosePrice(), series.numFactory().one());
 
-        private final double fee;
+        var cashFlow = new CashFlow(series, tradingRecord, 2, EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.MARK_TO_MARKET);
 
-        private FixedHoldingCostModel(double fee) {
-            this.fee = fee;
-        }
+        var expected = series.getBar(2).getClosePrice().dividedBy(series.getBar(0).getClosePrice());
+        assertTrue(cashFlow.getValue(2).isEqual(expected));
+        assertNumEquals(cashFlow.getValue(2), expected);
+    }
+
+    @Test
+    public void cashFlow_ignore_skipsPositionsThatAreOpenAtFinalIndex() {
+        var series = new MockBarSeriesBuilder().withData(10d, 11d, 12d, 13d, 100d).build();
+        var tradingRecord = new BaseTradingRecord();
+        tradingRecord.enter(0, series.getBar(0).getClosePrice(), series.numFactory().one());
+        tradingRecord.exit(4, series.getBar(4).getClosePrice(), series.numFactory().one());
+
+        var cashFlow = new CashFlow(series, tradingRecord, 2, EquityCurveMode.MARK_TO_MARKET,
+                OpenPositionHandling.IGNORE);
+
+        assertNumEquals(cashFlow.getValue(2), series.numFactory().one());
+    }
+
+    private record FixedHoldingCostModel(double fee) implements CostModel {
 
         @Override
         public Num calculate(Position position, int finalIndex) {
@@ -498,8 +518,8 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
 
         @Override
         public boolean equals(CostModel otherModel) {
-            if (otherModel instanceof FixedHoldingCostModel other) {
-                return other.fee == fee;
+            if (otherModel instanceof FixedHoldingCostModel(double fee1)) {
+                return fee1 == fee;
             }
             return false;
         }
