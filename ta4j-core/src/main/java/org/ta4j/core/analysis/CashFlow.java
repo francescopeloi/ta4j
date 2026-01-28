@@ -24,7 +24,6 @@
 package org.ta4j.core.analysis;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.ta4j.core.*;
@@ -227,10 +226,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
     }
 
     private void ensureValuesSizeAtLeast(int requiredSize) {
-        if (requiredSize > values.size()) {
-            var lastValue = values.getLast();
-            values.addAll(Collections.nCopies(requiredSize - values.size(), lastValue));
-        }
+        padToSize(values, requiredSize, values.getLast());
     }
 
     /**
@@ -284,9 +280,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
      * @param endIndex the end index
      */
     private void fillToTheEnd(int endIndex) {
-        if (endIndex >= values.size()) {
-            var lastValue = values.getLast();
-            values.addAll(Collections.nCopies(endIndex - values.size() + 1, lastValue));
-        }
+        padToEndIndex(values, endIndex, values.getLast());
     }
 }

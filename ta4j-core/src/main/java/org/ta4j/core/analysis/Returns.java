@@ -258,10 +258,9 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
         final int entryIndex = position.getEntry().getIndex();
         int begin = entryIndex + 1;
         if (begin > rawValues.size()) {
-            int paddingSize = begin - rawValues.size();
             Num zero = barSeries.numFactory().zero();
-            rawValues.addAll(Collections.nCopies(paddingSize, zero));
-            values.addAll(Collections.nCopies(paddingSize, zero));
+            padToSize(rawValues, begin, zero);
+            padToSize(values, begin, zero);
         }
 
         int startingIndex = Math.max(begin, 1);
@@ -414,11 +413,9 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      */
     private void fillToTheEnd(int endIndex) {
         if (endIndex >= rawValues.size()) {
-            var paddingSize = barSeries.getEndIndex() - rawValues.size() + 1;
             var zero = barSeries.numFactory().zero();
-            var c = Collections.nCopies(paddingSize, zero);
-            rawValues.addAll(c);
-            values.addAll(c);
+            padToEndIndex(rawValues, endIndex, zero);
+            padToEndIndex(values, endIndex, zero);
         }
     }
 
