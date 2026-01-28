@@ -171,7 +171,7 @@ public class BaseTradingRecord implements TradingRecord {
      * @since 0.22.2
      */
     public BaseTradingRecord(Position position) {
-        this(positionToTrades(position));
+        this(position.getTransactionCostModel(), position.getHoldingCostModel(), positionToTrades(position));
     }
 
     /**

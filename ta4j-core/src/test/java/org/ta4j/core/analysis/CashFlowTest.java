@@ -33,6 +33,8 @@ import org.junit.Test;
 import org.ta4j.core.BaseTradingRecord;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.Trade;
+import org.ta4j.core.analysis.cost.CostModel;
+import org.ta4j.core.analysis.cost.FixedTransactionCostModel;
 import org.ta4j.core.indicators.AbstractIndicatorTest;
 import org.ta4j.core.mocks.MockBarSeriesBuilder;
 import org.ta4j.core.num.Num;
@@ -406,6 +408,23 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
     }
 
     @Test
+    public void cashFlowFromPositionPreservesCostModels() {
+        var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(100d, 100d, 100d).build();
+        var transactionCost = new FixedTransactionCostModel(1d);
+        var holdingCost = new FixedHoldingCostModel(4d);
+        var amount = numFactory.one();
+        var entry = Trade.buyAt(0, sampleBarSeries.getBar(0).getClosePrice(), amount, transactionCost);
+        var exit = Trade.sellAt(2, sampleBarSeries.getBar(2).getClosePrice(), amount, transactionCost);
+        var position = new Position(entry, exit, transactionCost, holdingCost);
+
+        var cashFlow = new CashFlow(sampleBarSeries, position);
+
+        assertNumEquals(1, cashFlow.getValue(0));
+        assertNumEquals(98d / 101d, cashFlow.getValue(1));
+        assertNumEquals(97d / 101d, cashFlow.getValue(2));
+    }
+
+    @Test
     public void cashFlowFromPositionUsesRealizedCurve() {
         var sampleBarSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 2d, 3d).build();
         var position = new Position(Trade.buyAt(0, sampleBarSeries), Trade.sellAt(2, sampleBarSeries));
@@ -415,6 +434,42 @@ public class CashFlowTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(1, cashFlow.getValue(0));
         assertNumEquals(1, cashFlow.getValue(1));
         assertNumEquals(3, cashFlow.getValue(2));
+    }
+
+    private static final class FixedHoldingCostModel implements CostModel {
+
+        private final double fee;
+
+        private FixedHoldingCostModel(double fee) {
+            this.fee = fee;
+        }
+
+        @Override
+        public Num calculate(Position position, int finalIndex) {
+            return cost(position);
+        }
+
+        @Override
+        public Num calculate(Position position) {
+            return cost(position);
+        }
+
+        @Override
+        public Num calculate(Num price, Num amount) {
+            return price.getNumFactory().numOf(fee);
+        }
+
+        @Override
+        public boolean equals(CostModel otherModel) {
+            if (otherModel instanceof FixedHoldingCostModel other) {
+                return other.fee == fee;
+            }
+            return false;
+        }
+
+        private Num cost(Position position) {
+            return position.getEntry().getPricePerAsset().getNumFactory().numOf(fee);
+        }
     }
 
 }
