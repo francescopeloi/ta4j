@@ -41,6 +41,23 @@ import org.ta4j.core.num.NumFactory;
 public interface PerformanceIndicator extends Indicator<Num> {
 
     /**
+     * Returns the equity curve mode that influences open position handling.
+     *
+     * @return the equity curve mode
+     * @since 0.22.2
+     */
+    EquityCurveMode getEquityCurveMode();
+
+    /**
+     * Calculates indicator values for a single position.
+     *
+     * @param position   the position
+     * @param finalIndex index up until values of open positions are considered
+     * @since 0.22.2
+     */
+    void calculatePosition(Position position, int finalIndex);
+
+    /**
      * Calculates indicator values based on the provided trading record.
      *
      * @param tradingRecord        the trading record
@@ -60,23 +77,6 @@ public interface PerformanceIndicator extends Indicator<Num> {
         });
         handleLastPosition(tradingRecord, finalIndex, effectiveOpenPositionHandling);
     }
-
-    /**
-     * Returns the equity curve mode that influences open position handling.
-     *
-     * @return the equity curve mode
-     * @since 0.22.2
-     */
-    EquityCurveMode getEquityCurveMode();
-
-    /**
-     * Calculates indicator values for a single position.
-     *
-     * @param position   the position
-     * @param finalIndex index up until values of open positions are considered
-     * @since 0.22.2
-     */
-    void calculatePosition(Position position, int finalIndex);
 
     private boolean shouldCalculatePosition(Position position, int finalIndex,
             OpenPositionHandling effectiveOpenPositionHandling) {
@@ -148,13 +148,11 @@ public interface PerformanceIndicator extends Indicator<Num> {
      * @param isLongTrade true, if the entry trade type is BUY
      */
     default Num addCost(Num rawPrice, Num holdingCost, boolean isLongTrade) {
-        Num netPrice;
         if (isLongTrade) {
-            netPrice = rawPrice.minus(holdingCost);
+            return rawPrice.minus(holdingCost);
         } else {
-            netPrice = rawPrice.plus(holdingCost);
+            return rawPrice.plus(holdingCost);
         }
-        return netPrice;
     }
 
     /**
@@ -167,8 +165,6 @@ public interface PerformanceIndicator extends Indicator<Num> {
      * @since 0.22.2
      */
     default Num averageHoldingCostPerPeriod(Position position, int endIndex, NumFactory numFactory) {
-        Objects.requireNonNull(position);
-        Objects.requireNonNull(numFactory);
         var periods = Math.max(0, endIndex - position.getEntry().getIndex());
         if (periods == 0) {
             return numFactory.zero();
@@ -183,30 +179,16 @@ public interface PerformanceIndicator extends Indicator<Num> {
      * @param position the position
      * @param endIndex index up until values of open positions are considered
      * @param series   the bar series
-     * @return the exit price if an exit exists within the end index, otherwise the bar close
+     * @return the exit price if an exit exists within the end index, otherwise the
+     *         bar close
      * @since 0.22.2
      */
     default Num resolveExitPrice(Position position, int endIndex, BarSeries series) {
-        Objects.requireNonNull(position);
-        Objects.requireNonNull(series);
         var exit = position.getExit();
         if (exit != null && exit.getIndex() <= endIndex) {
             return exit.getNetPrice();
         }
         return series.getBar(endIndex).getClosePrice();
-     * Pads a list up to the required size using the provided pad value.
-     *
-     * @param values       the list to pad
-     * @param requiredSize the required list size
-     * @param padValue     the value to append while padding
-     * @since 0.22.2
-     */
-    default void padToSize(List<Num> values, int requiredSize, Num padValue) {
-        Objects.requireNonNull(values);
-        Objects.requireNonNull(padValue);
-        if (requiredSize > values.size()) {
-            values.addAll(Collections.nCopies(requiredSize - values.size(), padValue));
-        }
     }
 
     /**
@@ -219,10 +201,22 @@ public interface PerformanceIndicator extends Indicator<Num> {
      * @since 0.22.2
      */
     default void padToEndIndex(List<Num> values, int endIndex, Num padValue) {
-        Objects.requireNonNull(values);
-        Objects.requireNonNull(padValue);
         if (endIndex >= values.size()) {
             padToSize(values, endIndex + 1, padValue);
+        }
+    }
+
+    /**
+     * Pads a list up to the required size using the provided pad value.
+     *
+     * @param values       the list to pad
+     * @param requiredSize the required list size
+     * @param padValue     the value to append while padding
+     * @since 0.22.2
+     */
+    default void padToSize(List<Num> values, int requiredSize, Num padValue) {
+        if (requiredSize > values.size()) {
+            values.addAll(Collections.nCopies(requiredSize - values.size(), padValue));
         }
     }
 
