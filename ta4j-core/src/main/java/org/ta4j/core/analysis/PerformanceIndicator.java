@@ -26,10 +26,12 @@ package org.ta4j.core.analysis;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.Position;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.num.Num;
+import org.ta4j.core.num.NumFactory;
 
 /**
  * Shared contract for performance indicators derived from trading records.
@@ -156,6 +158,42 @@ public interface PerformanceIndicator extends Indicator<Num> {
     }
 
     /**
+     * Computes the average holding cost per period for the given position.
+     *
+     * @param position   the position
+     * @param endIndex   index up until cash flows of open positions are considered
+     * @param numFactory the {@link Num} factory
+     * @return the average holding cost per period, or zero when no periods elapsed
+     * @since 0.22.2
+     */
+    default Num averageHoldingCostPerPeriod(Position position, int endIndex, NumFactory numFactory) {
+        Objects.requireNonNull(position);
+        Objects.requireNonNull(numFactory);
+        var periods = Math.max(0, endIndex - position.getEntry().getIndex());
+        if (periods == 0) {
+            return numFactory.zero();
+        }
+        var holdingCost = position.getHoldingCost(endIndex);
+        return holdingCost.dividedBy(numFactory.numOf(periods));
+    }
+
+    /**
+     * Resolves the exit price for a position at the given end index.
+     *
+     * @param position the position
+     * @param endIndex index up until values of open positions are considered
+     * @param series   the bar series
+     * @return the exit price if an exit exists within the end index, otherwise the bar close
+     * @since 0.22.2
+     */
+    default Num resolveExitPrice(Position position, int endIndex, BarSeries series) {
+        Objects.requireNonNull(position);
+        Objects.requireNonNull(series);
+        var exit = position.getExit();
+        if (exit != null && exit.getIndex() <= endIndex) {
+            return exit.getNetPrice();
+        }
+        return series.getBar(endIndex).getClosePrice();
      * Pads a list up to the required size using the provided pad value.
      *
      * @param values       the list to pad

@@ -195,11 +195,10 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
         var startingIndex = Math.max(beginIndexExclusive, 1);
         var holdingCost = position.getHoldingCost(endIndex);
-        var effectivePeriodCount = Math.max(1, endIndex - entryIndex);
         var netEntryPrice = position.getEntry().getNetPrice();
 
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
-            var averageHoldingCostPerPeriod = holdingCost.dividedBy(numFactory.numOf(effectivePeriodCount));
+            var averageHoldingCostPerPeriod = averageHoldingCostPerPeriod(position, endIndex, numFactory);
 
             for (var barIndex = startingIndex; barIndex < endIndex; barIndex++) {
                 var closePrice = barSeries.getBar(barIndex).getClosePrice();
@@ -208,9 +207,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
                 values.add(entryEquity.multipliedBy(ratio));
             }
 
-            var exitTrade = position.getExit();
-            var exitPrice = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
-                    : barSeries.getBar(endIndex).getClosePrice();
+            var exitPrice = resolveExitPrice(position, endIndex, barSeries);
             var netExitPrice = addCost(exitPrice, averageHoldingCostPerPeriod, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
             values.add(entryEquity.multipliedBy(ratio));

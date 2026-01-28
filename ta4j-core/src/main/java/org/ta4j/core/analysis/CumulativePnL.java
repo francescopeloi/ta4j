@@ -182,7 +182,6 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
     @Override
     public void calculatePosition(Position position, int finalIndex) {
         var numFactory = barSeries.numFactory();
-        var zero = numFactory.zero();
         var isLong = position.getEntry().isBuy();
         var entryIndex = position.getEntry().getIndex();
         var endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
@@ -193,9 +192,8 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
         var baseAtEntry = values.get(entryIndex);
         var startingIndex = Math.max(begin, 1);
 
-        var periods = Math.max(0, endIndex - entryIndex);
         var holdingCost = position.getHoldingCost(endIndex);
-        var averageCostPerPeriod = periods > 0 ? holdingCost.dividedBy(numFactory.numOf(periods)) : zero;
+        var averageCostPerPeriod = averageHoldingCostPerPeriod(position, endIndex, numFactory);
         var netEntryPrice = position.getEntry().getNetPrice();
 
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
@@ -206,9 +204,7 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
                 values.add(baseAtEntry.plus(delta));
             }
 
-            var exitTrade = position.getExit();
-            var exitRaw = exitTrade != null && exitTrade.getIndex() <= endIndex ? exitTrade.getNetPrice()
-                    : barSeries.getBar(endIndex).getClosePrice();
+            var exitRaw = resolveExitPrice(position, endIndex, barSeries);
             var netExit = addCost(exitRaw, averageCostPerPeriod, isLong);
             var deltaExit = isLong ? netExit.minus(netEntryPrice) : netEntryPrice.minus(netExit);
             values.add(baseAtEntry.plus(deltaExit));
