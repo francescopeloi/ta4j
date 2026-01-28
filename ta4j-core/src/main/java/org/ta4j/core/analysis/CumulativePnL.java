@@ -187,10 +187,7 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
         var endIndex = determineEndIndex(position, finalIndex, barSeries.getEndIndex());
         var begin = entryIndex + 1;
 
-        if (begin > values.size()) {
-            var last = values.getLast();
-            values.addAll(Collections.nCopies(begin - values.size(), last));
-        }
+        padToSize(values, begin, values.getLast());
 
         var baseAtEntry = values.get(entryIndex);
         var startingIndex = Math.max(begin, 1);
@@ -269,8 +266,7 @@ public final class CumulativePnL implements Indicator<Num>, PerformanceIndicator
 
     private void fillToTheEnd(int endIndex) {
         if (endIndex >= values.size()) {
-            var last = values.getLast();
-            values.addAll(Collections.nCopies(barSeries.getEndIndex() - values.size() + 1, last));
+            padToEndIndex(values, barSeries.getEndIndex(), values.getLast());
         }
     }
 

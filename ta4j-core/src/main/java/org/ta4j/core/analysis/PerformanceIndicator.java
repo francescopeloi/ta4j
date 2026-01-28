@@ -23,6 +23,8 @@
  */
 package org.ta4j.core.analysis;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
@@ -192,6 +194,36 @@ public interface PerformanceIndicator extends Indicator<Num> {
             return exit.getNetPrice();
         }
         return series.getBar(endIndex).getClosePrice();
+     * Pads a list up to the required size using the provided pad value.
+     *
+     * @param values       the list to pad
+     * @param requiredSize the required list size
+     * @param padValue     the value to append while padding
+     * @since 0.22.2
+     */
+    default void padToSize(List<Num> values, int requiredSize, Num padValue) {
+        Objects.requireNonNull(values);
+        Objects.requireNonNull(padValue);
+        if (requiredSize > values.size()) {
+            values.addAll(Collections.nCopies(requiredSize - values.size(), padValue));
+        }
+    }
+
+    /**
+     * Pads a list up to and including the specified end index using the provided
+     * pad value.
+     *
+     * @param values   the list to pad
+     * @param endIndex the last required index
+     * @param padValue the value to append while padding
+     * @since 0.22.2
+     */
+    default void padToEndIndex(List<Num> values, int endIndex, Num padValue) {
+        Objects.requireNonNull(values);
+        Objects.requireNonNull(padValue);
+        if (endIndex >= values.size()) {
+            padToSize(values, endIndex + 1, padValue);
+        }
     }
 
 }

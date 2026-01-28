@@ -35,6 +35,7 @@
 - **Open position handling**: Added configurable handling for the last open position in CashFlow, CumulativePnL, and Returns.
 - **Performance indicator helpers**: Consolidated analysis helper logic into `PerformanceIndicator` and updated callers/tests accordingly.
 - **PerformanceIndicator defaults**: Added shared helpers for average holding cost per period and exit price resolution in core performance calculations.
+- **Performance indicator padding**: Added reusable padding helpers on `PerformanceIndicator` and aligned CashFlow, CumulativePnL, and Returns with the shared behavior.
 
 ### Fixed
 - **TimeBarBuilder**: Preserve in-progress bars when trade ingestion skips across multiple time periods.
