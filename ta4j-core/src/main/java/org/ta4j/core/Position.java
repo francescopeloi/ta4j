@@ -410,6 +410,24 @@ public class Position implements Serializable {
     }
 
     /**
+     * @return the transaction cost model
+     *
+     * @since 0.22.2
+     */
+    public CostModel getTransactionCostModel() {
+        return transactionCostModel;
+    }
+
+    /**
+     * @return the holding cost model
+     *
+     * @since 0.22.2
+     */
+    public CostModel getHoldingCostModel() {
+        return holdingCostModel;
+    }
+
+    /**
      * @return the {@link #startingType}
      */
     public TradeType getStartingType() {
