@@ -80,7 +80,6 @@ public interface PerformanceIndicator extends Indicator<Num> {
 
     private boolean shouldCalculatePosition(Position position, int finalIndex,
             OpenPositionHandling effectiveOpenPositionHandling) {
-        Objects.requireNonNull(position);
         var entry = position.getEntry();
         if (entry == null || entry.getIndex() > finalIndex) {
             return false;
