@@ -54,7 +54,9 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
     private final ReturnRepresentation representation;
     private final EquityCurveMode equityCurveMode;
 
-    /** The bar series. */
+    /**
+     * The bar series.
+     */
     private final BarSeries barSeries;
 
     /**
@@ -86,7 +88,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      *                             calculation method and output format)
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, int finalIndex,
@@ -122,7 +123,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      * @param barSeries       the bar series
      * @param position        a single position
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, Position position, EquityCurveMode equityCurveMode) {
@@ -149,7 +149,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      * @param representation  the return representation (determines both calculation
      *                        method and output format)
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, Position position, ReturnRepresentation representation,
@@ -165,7 +164,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      * @param representation  the return representation (determines both calculation
      *                        method and output format)
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
@@ -193,7 +191,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      * @param barSeries       the bar series
      * @param tradingRecord   the trading record
      * @param equityCurveMode the calculation mode
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, EquityCurveMode equityCurveMode) {
@@ -220,7 +217,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      * @param representation       the return representation (determines both
      *                             calculation method and output format)
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
@@ -238,7 +234,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      *                             calculation method and output format)
      * @param equityCurveMode      the calculation mode
      * @param openPositionHandling how to handle the last open position
-     *
      * @since 0.22.2
      */
     public Returns(BarSeries barSeries, TradingRecord tradingRecord, ReturnRepresentation representation,
@@ -253,7 +248,6 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
      * @param position   a single position
      * @param finalIndex the index up to which the returns of open positions are
      *                   considered
-     *
      * @since 0.22.2
      */
     @Override
@@ -273,7 +267,9 @@ public class Returns implements Indicator<Num>, PerformanceIndicator {
         int startingIndex = Math.max(begin, 1);
         int nPeriods = endIndex - entryIndex;
         Num holdingCost = position.getHoldingCost(endIndex);
-
+        if (nPeriods == 0) {
+            return;
+        }
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
             Num avgCost = holdingCost.dividedBy(getBarSeries().numFactory().numOf(nPeriods));
 

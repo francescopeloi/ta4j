@@ -23,6 +23,7 @@
  */
 package org.ta4j.core.analysis;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assume.assumeTrue;
 import org.junit.Test;
 import org.ta4j.core.*;
@@ -296,6 +297,22 @@ public class ReturnsTest extends AbstractIndicatorTest<Indicator<Num>, Num> {
         assertNumEquals(NaN.NaN, positionReturns.getValue(0));
         assertNumEquals(1.0, positionReturns.getValue(1));
         assertNumEquals(tradingRecordReturns.getValue(1), positionReturns.getValue(1));
+    }
+
+    @Test
+    public void openPositionOpenedOnFinalBarYieldsZeroReturn() {
+        var barSeries = new MockBarSeriesBuilder().withNumFactory(numFactory).withData(1d, 1d).build();
+        var tradingRecord = new BaseTradingRecord();
+
+        var endIndex = barSeries.getEndIndex();
+        tradingRecord.enter(endIndex, barSeries.getBar(endIndex).getClosePrice(), barSeries.numFactory().one());
+
+        var returns = new Returns(barSeries, tradingRecord, endIndex, ReturnRepresentation.DECIMAL,
+                EquityCurveMode.MARK_TO_MARKET, OpenPositionHandling.MARK_TO_MARKET);
+
+        var lastReturn = returns.getValue(endIndex);
+        assertFalse(lastReturn.isNaN());
+        assertNumEquals(0, lastReturn);
     }
 
 }
