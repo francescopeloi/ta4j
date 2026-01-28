@@ -32,13 +32,23 @@ import org.ta4j.core.num.Num;
 
 /**
  * Allows to follow the money cash flow involved by a list of positions over a
- * bar series, either marked-to-market or using realized values only. Optionally
- * includes an open position.
+ * bar series, either marked to market or using realized values only.
  */
 public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
+    /**
+     * The bar series.
+     */
     private final BarSeries barSeries;
+
+    /**
+     * The (accrued) cash flow sequence (without trading costs).
+     */
     private final List<Num> values;
+
+    /**
+     * The equity curve calculation mode.
+     */
     private final EquityCurveMode equityCurveMode;
 
     /**
@@ -56,8 +66,7 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
             OpenPositionHandling openPositionHandling) {
         this.barSeries = Objects.requireNonNull(barSeries);
         this.equityCurveMode = Objects.requireNonNull(equityCurveMode);
-        var aOne = Collections.singletonList(barSeries.numFactory().one());
-        values = new ArrayList<>(aOne);
+        values = new ArrayList<>(List.of(barSeries.numFactory().one()));
 
         calculate(Objects.requireNonNull(tradingRecord), finalIndex, Objects.requireNonNull(openPositionHandling));
         fillToTheEnd(barSeries.getEndIndex());
@@ -180,30 +189,28 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
         ensureValuesSizeAtLeast(beginIndexExclusive);
 
-        var zero = numFactory.zero();
         var entryEquity = values.get(entryIndex);
-        if (!entryEquity.isGreaterThan(zero)) {
+        if (!entryEquity.isGreaterThan(numFactory.zero())) {
             return;
         }
 
         var startingIndex = Math.max(beginIndexExclusive, 1);
         var holdingCost = position.getHoldingCost(endIndex);
-        var numberOfPeriods = endIndex - entryIndex;
-        var effectivePeriodCount = Math.max(1, numberOfPeriods);
+        var effectivePeriodCount = Math.max(1, endIndex - entryIndex);
         var netEntryPrice = position.getEntry().getNetPrice();
 
         if (equityCurveMode == EquityCurveMode.MARK_TO_MARKET) {
-            var avgCost = holdingCost.dividedBy(numFactory.numOf(effectivePeriodCount));
-            for (var i = startingIndex; i < endIndex; i++) {
-                var closePrice = barSeries.getBar(i).getClosePrice();
-                var intermediateNetPrice = AnalysisUtils.addCost(closePrice, avgCost, isLongTrade);
+            var averageHoldingCostPerPeriod = holdingCost.dividedBy(numFactory.numOf(effectivePeriodCount));
+
+            for (var barIndex = startingIndex; barIndex < endIndex; barIndex++) {
+                var closePrice = barSeries.getBar(barIndex).getClosePrice();
+                var intermediateNetPrice = AnalysisUtils.addCost(closePrice, averageHoldingCostPerPeriod, isLongTrade);
                 var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, intermediateNetPrice);
                 values.add(entryEquity.multipliedBy(ratio));
             }
 
             var exitPrice = position.getExit() != null ? position.getExit().getNetPrice()
                     : barSeries.getBar(endIndex).getClosePrice();
-
             var netExitPrice = AnalysisUtils.addCost(exitPrice, averageHoldingCostPerPeriod, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
             values.add(entryEquity.multipliedBy(ratio));
@@ -214,7 +221,14 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
 
             var netExitPrice = AnalysisUtils.addCost(position.getExit().getNetPrice(), holdingCost, isLongTrade);
             var ratio = getIntermediateRatio(isLongTrade, netEntryPrice, netExitPrice);
-            values.add(entryValue.multipliedBy(ratio));
+            values.add(entryEquity.multipliedBy(ratio));
+        }
+    }
+
+    private void ensureValuesSizeAtLeast(int requiredSize) {
+        if (requiredSize > values.size()) {
+            var lastValue = values.getLast();
+            values.addAll(Collections.nCopies(requiredSize - values.size(), lastValue));
         }
     }
 
@@ -244,18 +258,6 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
         return barSeries.getBarCount();
     }
 
-    @Override
-    public EquityCurveMode getEquityCurveMode() {
-        return equityCurveMode;
-    }
-
-    private void fillToTheEnd(int endIndex) {
-        if (endIndex >= values.size()) {
-            var lastValue = values.getLast();
-            values.addAll(Collections.nCopies(endIndex - values.size() + 1, lastValue));
-        }
-    }
-
     /**
      * Calculates the ratio of intermediate prices.
      *
@@ -268,5 +270,22 @@ public class CashFlow implements Indicator<Num>, PerformanceIndicator {
             return exitPrice.dividedBy(entryPrice);
         }
         return entryPrice.getNumFactory().numOf(2).minus(exitPrice.dividedBy(entryPrice));
+    }
+
+    @Override
+    public EquityCurveMode getEquityCurveMode() {
+        return equityCurveMode;
+    }
+
+    /**
+     * Pads {@link #values} with its last value up until {@code endIndex}.
+     *
+     * @param endIndex the end index
+     */
+    private void fillToTheEnd(int endIndex) {
+        if (endIndex >= values.size()) {
+            var lastValue = values.getLast();
+            values.addAll(Collections.nCopies(endIndex - values.size() + 1, lastValue));
+        }
     }
 }
