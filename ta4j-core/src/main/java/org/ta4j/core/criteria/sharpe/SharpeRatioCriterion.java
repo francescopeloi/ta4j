@@ -21,7 +21,7 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package org.ta4j.core.criteria;
+package org.ta4j.core.criteria.sharpe;
 
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -35,6 +35,7 @@ import org.ta4j.core.analysis.ExcessReturns;
 import org.ta4j.core.analysis.ExcessReturns.CashReturnPolicy;
 import org.ta4j.core.analysis.OpenPositionHandling;
 import org.ta4j.core.analysis.frequency.*;
+import org.ta4j.core.criteria.AbstractAnalysisCriterion;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.utils.BarSeriesUtils;
 
@@ -63,8 +64,8 @@ import org.ta4j.core.utils.BarSeriesUtils;
  * indices.</li>
  * <li>{@link SamplingFrequency#SECOND}/{@link SamplingFrequency#MINUTE}/{@link SamplingFrequency#HOUR}/{@link SamplingFrequency#DAY}/{@link SamplingFrequency#WEEK}/{@link SamplingFrequency#MONTH}:
  * returns are computed between period endpoints detected from bar
- * {@code endTime} after converting it to {@link #groupingZoneId}. Period
- * boundaries follow ISO week semantics for {@code WEEKLY}.</li>
+ * {@code endTime} after converting it to groupingZoneId. Period boundaries
+ * follow ISO week semantics for {@code WEEKLY}.</li>
  * </ul>
  * The first sampled return is anchored at the series begin index, even when
  * evaluating a single {@link Position}, so the first period return spans from
@@ -111,15 +112,10 @@ import org.ta4j.core.utils.BarSeriesUtils;
  */
 public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
 
-    public enum Annualization {
-        PERIOD, ANNUALIZED
-    }
-
     private final SamplingFrequencyIndexes samplingFrequencyIndexes;
     private final Annualization annualization;
     private final CashReturnPolicy cashReturnPolicy;
     private final double annualRiskFreeRate;
-    private final ZoneId groupingZoneId;
     private final OpenPositionHandling openPositionHandling;
 
     /**
@@ -195,12 +191,12 @@ public class SharpeRatioCriterion extends AbstractAnalysisCriterion {
             OpenPositionHandling openPositionHandling) {
         this.annualRiskFreeRate = annualRiskFreeRate;
         this.annualization = Objects.requireNonNull(annualization, "annualization must not be null");
-        this.groupingZoneId = Objects.requireNonNull(groupingZoneId, "groupingZoneId must not be null");
         this.cashReturnPolicy = Objects.requireNonNull(cashReturnPolicy, "cashReturnPolicy must not be null");
         this.openPositionHandling = Objects.requireNonNull(openPositionHandling,
                 "openPositionHandling must not be null");
         Objects.requireNonNull(samplingFrequency, "samplingFrequency must not be null");
-        this.samplingFrequencyIndexes = new SamplingFrequencyIndexes(samplingFrequency, this.groupingZoneId);
+        Objects.requireNonNull(groupingZoneId, "groupingZoneId must not be null");
+        this.samplingFrequencyIndexes = new SamplingFrequencyIndexes(samplingFrequency, groupingZoneId);
     }
 
     @Override
