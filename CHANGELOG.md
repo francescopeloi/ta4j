@@ -20,7 +20,6 @@
 - **BaseBarSeriesBuilder**: Deprecated `setConstrained` in favor of deriving constrained mode from max-bar-count configuration.
 - **Release workflow notifications**: Post GitHub Discussion updates for release-scheduler and release runs with decision summaries.
 - **Workflow lint hook**: Added a repo `pre-push` hook to run `actionlint` on workflow changes (see CONTRIBUTING).
-- **GitHub Actions Java setup**: Centralized the Java version configuration in a shared setup action for workflows.
 - **Release health workflow**: Added scheduled checks for tag reachability, snapshot version drift, stale release PRs, and missing release notes, with summaries posted to Discussions.
 - **Two-phase release workflows**: Added `prepare-release.yml` and `publish-release.yml` to split release preparation from tagging and deployment.
 - **Release workflow branching**: Auto-merge the release PR by default, with optional direct push to the default branch when `RELEASE_DIRECT_PUSH=true`.
@@ -35,6 +34,7 @@
 - **Factory selection from bars**: Derive the NumFactory from the first available bar price instead of assuming a specific price is always present.
 - **CashFlow**: Added a realized-only calculation mode alongside the default mark-to-market cash flow curve.
 - **License headers**: Switch Java source file headers to SPDX identifiers.
+- **GitHub Actions Java setup**: Centralized the Java version configuration in a shared setup action for workflows.
 - **JDK**: updated to Java 25
 
 ### Fixed
